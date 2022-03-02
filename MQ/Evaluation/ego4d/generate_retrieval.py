@@ -108,7 +108,7 @@ def gen_retrieval_multicore(opt):
 
     video_list = []
     for k, v in ego4d_gt.items():
-        if v['subset'] == opt['infer_datasplit']:
+        if v['subset'] in opt['infer_datasplit']:
             video_list.append(k)
 
     # load all categories

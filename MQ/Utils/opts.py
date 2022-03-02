@@ -27,7 +27,7 @@ def parse_opt():
     parser.add_argument(
         '--clip_anno',
         type=str,
-        default="Evaluation/ego4d/annot/clip_annotations_split.json")
+        default="Evaluation/ego4d/annot/clip_annotations.json")
     parser.add_argument(
         '--moment_classes',
         type=str,

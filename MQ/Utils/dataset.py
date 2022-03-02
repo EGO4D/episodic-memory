@@ -61,6 +61,7 @@ class VideoDataSet(data.Dataset):
         else:
             class_list = list(set(class_list))
             class_list = sorted(class_list)
+            print(f'The total number of classes is {len(class_list) + 1}')
             self.classes = {'Background': 0}
             for i,cls in enumerate(class_list):
                 self.classes[cls] = i + 1
@@ -97,7 +98,11 @@ class VideoDataSet(data.Dataset):
         win_data = v_data[:, clip_start: clip_end+1]
         num_frms = min(win_data.shape[-1], self.temporal_scale)
         video_data[:, :num_frms] = win_data[:, :num_frms]
-
+        
+        # print(f'num_frms_v: {num_frms_v}')
+        # print(f'fps_v: {fps_v}')
+        # print(f'clip_start {clip_start}')
+        # print(f'clip_end {clip_end}')
         if self.mode == 'train':
             match_score_action, match_score_start, match_score_end, gt_bbox_padding, num_gt, num_frms = \
                 self._get_train_data_label_org(num_frms, clip_name, fps_v)
@@ -123,6 +128,9 @@ class VideoDataSet(data.Dataset):
             tmp_start = tmp_start_f / self.temporal_scale
             tmp_end = tmp_end_f / self.temporal_scale
 
+
+            print(f'tmp_start {tmp_start}')
+            print(f'tmp_end {tmp_end}')
             tmp_class = self.classes[tmp_info['label']]
             gt_bbox.append([tmp_start, tmp_end, tmp_class])
 
@@ -197,4 +205,5 @@ def iou_with_anchors(anchors_min, anchors_max, box_min, box_max):
     # print inter_len,union_len
     jaccard = np.divide(inter_len, union_len)
     return jaccard
+
 

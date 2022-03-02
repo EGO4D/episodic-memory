@@ -47,7 +47,7 @@ class Moment_Retrieval(object):
         ground_truth = {}
         for videoid, v in data.items():
 
-            if self.subset != v['subset']:
+            if not v['subset'] in self.subset:
                 continue
 
             annotations = {}

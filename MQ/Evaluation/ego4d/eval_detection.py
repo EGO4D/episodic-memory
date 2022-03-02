@@ -86,7 +86,7 @@ class ANETdetection(object):
         video_lst, t_start_lst, t_end_lst, label_lst = [], [], [], []
         for videoid, v in data.items():
             # print(v)
-            if self.subset != v['subset']:
+            if not v['subset'] in self.subset:
                 continue
             if videoid in self.blocked_videos:
                 continue
