@@ -1,0 +1,3 @@
+[submodule "VQ3D/depth_estimation/DPT"]
+	path = VQ3D/depth_estimation/DPT
+	url = git@github.com:isl-org/DPT.git
