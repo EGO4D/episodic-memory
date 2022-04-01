@@ -1,0 +1,48 @@
+# Hyperparameter sweep with nevergrad
+
+data:
+  data_root: /checkpoint/sramakri/datasets/Ego4D/MiniSets-1-to-6/clips
+  annot_root: /checkpoint/sramakri/datasets/Ego4D/MiniSets-1-to-6/vq_splits
+  video_bbox_root: /checkpoint/sramakri/datasets/Ego4D/MiniSets-1-to-6/bboxes
+  split: val
+  fps: 5.0
+  subsample: False
+  num_processes: 12
+  batch_size: 12
+  debug_mode: False
+  debug_count: 5
+  rcnn_batch_size: 8
+
+retrieval:
+  rotate_crop: True
+
+signals:
+  smoothing_sigma: 5
+  distance: 25
+  width: 3
+  prominence: 0.2
+  wlen: 50
+
+logging:
+  visualize: False
+  save_dir: "visualizations"
+  stats_save_path: "outputs.json.gz"
+
+model:
+  config_path: "config.yaml"
+  checkpoint_path: "model.pth"
+  score_thresh: 0.0
+  subsampling_factor: 1.0
+  recency_factor: 1.0
+
+tracker:
+  type: "kys" # Options: [ kys | pfilter ]
+  pfilter:
+    n_particles: 150
+    resample_proportion: 1.0
+    sim_thresh: 0.85
+    use_deep_similarity: True
+    debug: False
+  kys_tracker:
+    debug: False
+    model_path: "/private/home/sramakri/Research/Ego4D/code/episodic-memory-internal/VQ2D/pretrained_models/kys.pth"

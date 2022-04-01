@@ -1,0 +1,12 @@
+imagesize==1.2.0
+pandas
+scikit-image
+einops
+imageio==2.9.0
+pims
+jpeg4py
+visdom
+black==20.8b1
+ufmt==1.2
+usort==0.6.3
+seaborn
