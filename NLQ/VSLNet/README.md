@@ -50,7 +50,7 @@ python main.py \
     --predictor bert \
     --mode train \
     --video_feature_dim 2304 \
-    --max_pos_len 512 \
+    --max_pos_len 128 \
     --epochs 200 \
     --fv official \
     --num_workers 64 \
@@ -64,7 +64,7 @@ python main.py \
     --predictor bert \
     --mode test \
     --video_feature_dim 2304 \
-    --max_pos_len 512 \
+    --max_pos_len 128 \
     --fv official \
     --model_dir checkpoints/
 
