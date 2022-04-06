@@ -119,6 +119,8 @@ cd camera_pose_estimation/
         --output_dir data/v1/clips_camera_poses/ \
     ```
 
+* Note: Camera pose estimation results on the val set have been included for reference here: `data/all_clips_camera_poses_val.json`
+
 ### Depth estimation
 ```
 cd depth_estimation/
