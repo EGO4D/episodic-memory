@@ -10,8 +10,14 @@ pip install transformers
 
 ### Train && Test
 
+To train a new model
 ```    
 python moment_localization/train.py --cfg  experiments/ego4d/2D-TAN-40x40-K9L4-pool-window-std-sf.yaml --verbose
+```
+
+To generate the submission file, do
+```
+python moment_localization/test.py --cfg  experiments/ego4d/2D-TAN-40x40-K9L4-pool-window-std-sf.yaml --verbose --split test --result nlq_2dtan_submission.json
 ```
 
 ## Acknowledgements
