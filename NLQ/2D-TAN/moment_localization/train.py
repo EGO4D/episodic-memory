@@ -6,6 +6,7 @@ import _init_paths
 import os
 import pprint
 import argparse
+import random
 import numpy as np
 import torch
 import torch.backends.cudnn as cudnn
@@ -22,8 +23,16 @@ from core.utils import create_logger
 import models.loss as loss
 import math
 
-torch.manual_seed(0)
-torch.cuda.manual_seed(0)
+########### fix everything ###########
+seed = 42
+torch.manual_seed(seed)
+torch.cuda.manual_seed_all(seed)
+torch.cuda.manual_seed(seed)
+np.random.seed(seed)
+random.seed(seed)
+torch.backends.cudnn.deterministic = True
+torch.backends.cudnn.benchmark = False
+
 torch.autograd.set_detect_anomaly(True)
 def parse_args():
     parser = argparse.ArgumentParser(description='Train localization network')
@@ -43,6 +52,7 @@ def parse_args():
     parser.add_argument('--logDir', help='log path', type=str)
     parser.add_argument('--verbose', default=False, action="store_true", help='print progress bar')
     parser.add_argument('--tag', help='tags shown in log', type=str)
+    parser.add_argument('--debug', help='debug mode', action='store_true')
     args = parser.parse_args()
 
     return args
@@ -62,6 +72,9 @@ def reset_config(config, args):
         config.VERBOSE = args.verbose
     if args.tag:
         config.TAG = args.tag
+    if args.debug:
+        config.DEBUG = True
+        print('=============== debug mode ==============')
 
 
 if __name__ == '__main__':
@@ -157,13 +170,16 @@ if __name__ == '__main__':
         out_sorted_times = []
         for score, duration in zip(scores, durations):
             T = score.shape[-1]
-            sorted_indexs = np.dstack(np.unravel_index(np.argsort(score.cpu().detach().numpy().ravel())[::-1], (T, T))).tolist()
+            score_cpu = score.cpu().detach().numpy()
+            sorted_indexs = np.dstack(np.unravel_index(np.argsort(score_cpu.ravel())[::-1], (T, T))).tolist()
             sorted_indexs = np.array([item for item in sorted_indexs[0] if item[0] <= item[1]]).astype(float)
+            sorted_scores = np.array([score_cpu[0, int(x[0]),int(x[1])] for x in sorted_indexs])
 
             sorted_indexs[:,1] = sorted_indexs[:,1] + 1
             sorted_indexs = torch.from_numpy(sorted_indexs).cuda()
             target_size = config.DATASET.NUM_SAMPLE_CLIPS // config.DATASET.TARGET_STRIDE
-            out_sorted_times.append((sorted_indexs.float() / target_size * duration).tolist())
+            sorted_time = (sorted_indexs.float() / target_size * duration).tolist()
+            out_sorted_times.append([[t[0], t[1], s] for t, s in zip(sorted_time, sorted_scores)])
 
         return out_sorted_times
 
@@ -272,7 +288,8 @@ if __name__ == '__main__':
 
     def on_test_end(state):
         annotations = state['iterator'].dataset.annotations
-        state['Rank@N,mIoU@M'], state['miou'] = eval.eval_predictions(state['sorted_segments_list'], annotations, verbose=False)
+        merge = (state['split'] != 'train')
+        state['Rank@N,mIoU@M'], state['miou'] = eval.eval_predictions(state['sorted_segments_list'], annotations, verbose=False, merge_window=merge)
         if config.VERBOSE:
             state['progress_bar'].close()
 
