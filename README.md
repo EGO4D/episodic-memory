@@ -1,3 +1,10 @@
+**[NEW!] 2022 Ego4D Challenges now open for Episodic Memory**
+- [Natural Language Queries](https://eval.ai/web/challenges/challenge-page/1629/overview) (deadline June 1 2022)
+- [Visual Queries 2D](https://eval.ai/web/challenges/challenge-page/1619/overview) (deadline June 1 2022)
+- [Moments queries](https://eval.ai/web/challenges/challenge-page/1626/overview) (deadline Oct 1 2022)
+- [Visual Queries 3D](https://eval.ai/web/challenges/challenge-page/1646/overview) (deadline Oct 1 2022)
+
+
 # Ego4D Episodic Memory Benchmark
 
 [EGO4D](https://ego4d-data.org/docs/) is the world's largest egocentric (first person) video ML dataset and benchmark suite.
