@@ -90,6 +90,7 @@ class VideoDataSet(data.Dataset):
         v_data = torch.transpose(v_data, 0, 1)
         num_frms_v = v_data.shape[-1]
         fps_v = num_frms_v / clip_info['v_duration']
+        clip_info['fps'] = fps_v
 
         clip_start = int(clip_info['parent_start_sec'] * fps_v)
         clip_end = min(int(clip_info['parent_end_sec'] * fps_v), num_frms_v-1)
