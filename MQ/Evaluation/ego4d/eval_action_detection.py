@@ -82,7 +82,7 @@ class EvalActionDetection(object):
         self.average_mAP = self.mAP.mean()
 
         if self.verbose:
-            logging.info('[RESULTS] Performance on ActivityNet detection task.')
+            logging.info('[RESULTS] Performance on Ego4D detection task.')
             logging.info('\tmAP: {}'.format(self.mAP))
             logging.info('\tAverage-mAP: {}'.format(self.average_mAP))
         return self.average_mAP
