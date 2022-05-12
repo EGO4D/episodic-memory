@@ -1,10 +1,13 @@
 import json
 import pandas as pd
+import torch
+import os
 
 ######################################################################################################
 #                     Load data
 ######################################################################################################
 annotation_path = "../../annotations/"  # Change to your own path containing canonical annotation files
+feat_path = "video_features/"  # Change to your own path containing features of canonical videos
 info_path = annotation_path + 'manifest.csv'
 annot_path_train = annotation_path + 'moments_train.json'
 annot_path_val = annotation_path + 'moments_val.json'
@@ -31,7 +34,12 @@ for video in v_annot['videos']:
     vid = video['video_uid']
     clips = video['clips']
     v_duration = feat_info[feat_info.video_uid == vid].canonical_video_duration_sec.values[0]
-
+    try:
+        feats = torch.load(os.path.join(feat_path, vid + '.pt'))
+    except:
+        print(f'{vid} features do not exist!')
+        continue
+    fps = feats.shape[0] / v_duration
     for clip in clips:
         clip_id = clip['clip_uid']
 
@@ -44,6 +52,7 @@ for video in v_annot['videos']:
             clip_annot_1[clip_id]['parent_start_frm'] = clip['video_start_frame']
             clip_annot_1[clip_id]['parent_end_frm'] = clip['video_end_frame']
             clip_annot_1[clip_id]['v_duration'] = v_duration
+            clip_annot_1[clip_id]['fps'] = fps
             clip_annot_1[clip_id]['annotations'] = []
             clip_annot_1[clip_id]['subset'] = video['split']
 
