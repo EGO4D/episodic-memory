@@ -27,7 +27,10 @@ Create a conda environment and install required packages from scratch following 
 ```
      python Eval.py --dataset ego4d --output_path {OUTPUT_PATH} --out_prop_map {OUT_PMAP} --eval_stage all
 ```
-
+### Generate a submission file for the Ego4D Moment Queries challenge
+```
+    python Merge_detection_retrieval.py
+```
 
 ## Acknowledgements
 

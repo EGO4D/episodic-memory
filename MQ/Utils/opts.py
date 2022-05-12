@@ -57,7 +57,7 @@ def parse_opt():
     parser.add_argument(
         '--retrieval_result_file',
         type=str,
-        default="retreival_postNMS.json")
+        default="retrieval_postNMS.json")
     parser.add_argument(
         '--detad_sensitivity_file',
         type=str,
