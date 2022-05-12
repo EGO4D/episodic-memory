@@ -13,7 +13,12 @@ Create a conda environment and install required packages from scratch following 
     conda install -c conda-forge matplotlib 
     conda install -c conda-forge urllib3
 ```
-
+### Annotation conversion 
+If you use the canonical annotation files, you need to first convert them by removing unused 
+categories and video clips
+```
+    python Convert_annotation.py
+```
 
 ### Training
 ```    
