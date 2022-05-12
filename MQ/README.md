@@ -16,17 +16,16 @@ Create a conda environment and install required packages from scratch following 
 
 
 ### Training
-
 ```    
-     python Train.py [--use_xGPN] --is_train true --dataset ego4d --feature_path {DATA_PATH} --checkpoint_path {CHECKPOINT_PATH} --batch_size 32 --train_lr 0.0001
+     python Train.py --use_xGPN --is_train true --dataset ego4d --feature_path {DATA_PATH} --checkpoint_path {CHECKPOINT_PATH} --batch_size 32 --train_lr 0.0001
 ```
 ### Inference
 ```
-     python Infer.py  [--use_xGPN] --is_train false --dataset ego4d --feature_path {DATA_PATH} --checkpoint_path {CHECKPOINT_PATH}  --output_path {OUTPUT_PATH}   
+     python Infer.py  --use_xGPN --is_train false --dataset ego4d --feature_path {DATA_PATH} --checkpoint_path {CHECKPOINT_PATH}  --output_path {OUTPUT_PATH}   
 ```
 ### Evaluation
 ```
-     python Eval.py --dataset ego4d --output_path [OUTPUT_PATH] --out_prop_map {OUT_PMAP} --eval_stage all
+     python Eval.py --dataset ego4d --output_path {OUTPUT_PATH} --out_prop_map {OUT_PMAP} --eval_stage all
 ```
 
 
