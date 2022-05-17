@@ -49,8 +49,6 @@ for video in v_annot['videos']:
             clip_annot_1[clip_id]['clip_id'] = clip_id
             clip_annot_1[clip_id]['parent_start_sec'] = clip['video_start_sec']
             clip_annot_1[clip_id]['parent_end_sec'] = clip['video_end_sec']
-            clip_annot_1[clip_id]['parent_start_frm'] = clip['video_start_frame']
-            clip_annot_1[clip_id]['parent_end_frm'] = clip['video_end_frame']
             clip_annot_1[clip_id]['v_duration'] = v_duration
             clip_annot_1[clip_id]['fps'] = fps
             clip_annot_1[clip_id]['annotations'] = []
