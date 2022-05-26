@@ -99,5 +99,23 @@
     python -m ego4d.cli.cli -y --output_directory /path/to/output/ --datasets vq2d_models
     ```
 
+## [NEW] Making predictions for Ego4D challenge
+1. Ensure that `vq_test_unannotated.json` is copied to `$VQ2D_ROOT`.
+2. Copy `scripts/get_challenge_predictions.sh` to the experiment directory, update the paths and checkpoint id, and execute it. The arguments are similar to baseline evaluation in the previous section, but the script has been modified to output predictions consistent with the challenge format.
+    ```
+    EXPT_ROOT=<experiment path>
+    cp $VQ2D_ROOT/scripts/get_challenge_predictions.sh $EXPT_ROOT
+    cd $EXPT_ROOT
+    <UPDATE PATHS in get_challenge_predictions.sh>
+    chmod +x get_challenge_predictions.sh && ./get_challenge_predictions.sh
+    ```
+3. Note: For faster evaluation, increase `data.num_processes`.
+4. The file `$EXPT_ROOT/visual_queries_log/test_challenge_predictions.json` should be submitted on the EvalAI server.
+5. Before submission you can validate the format of the predictions using the following:
+    ```
+    cd $VQ2D_ROOT
+    python validate_challenge_predictions.py --test-unannotated-path <PATH TO vq_test_unannotated.json> --test-predictions-path <PATH to test_challenge_predictions.json>
+    ```
+
 ## Acknowledgements
 This codebase relies on [detectron2](https://github.com/facebookresearch/detectron2), [PyTracking](https://github.com/visionml/pytracking), [pfilter](https://github.com/johnhw/pfilter) and [ActivityNet](https://github.com/activitynet/ActivityNet) repositories.
