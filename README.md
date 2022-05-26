@@ -4,6 +4,7 @@
 - [Moments queries](https://eval.ai/web/challenges/challenge-page/1626/overview) (deadline Oct 1 2022)
 - [Visual Queries 3D](https://eval.ai/web/challenges/challenge-page/1646/overview) (deadline Oct 1 2022)
 
+**[NEW!] Detailed examples for VQ Challenge submission available here: [VQ2D README](./VQ2D/README.md)
 
 # Ego4D Episodic Memory Benchmark
 
