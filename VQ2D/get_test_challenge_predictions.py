@@ -142,7 +142,7 @@ def predict_vq_test(annotations, cfg, device_id, use_tqdm=False):
             "detection time: {:>6.2f} mins | "
             "peak signal time: {:>6.2f} mins | "
             "tracking time: {:>6.2f} mins".format(
-                annotation["dataset_uid"],
+                annotation["clip_uid"],
                 annotation["query_frame"],
                 clip_read_time / 60.0,
                 detection_time_taken / 60.0,
@@ -238,6 +238,8 @@ def convert_annotations_to_list(annotations):
             for a in c["annotations"]:
                 aid = a["annotation_uid"]
                 for qid, q in a["query_sets"].items():
+                    if not q['is_valid']:
+                        continue
                     annotations_list.append(
                         {
                             "metadata": {
@@ -264,7 +266,7 @@ def format_predictions(annotations, annotations_list, predicted_rts):
         query_set = annot["metadata"]["query_set"]
         if auid not in annotation_uid_to_prediction:
             annotation_uid_to_prediction[auid] = {}
-        annotation_uid_to_prediction[auid][query_set] = pred_rt.to_json()
+        annotation_uid_to_prediction[auid][query_set] = [rt.to_json() for rt in pred_rt]
     # Format predictions
     predictions = {
         "version": "1.0",
@@ -280,24 +282,28 @@ def format_predictions(annotations, annotations_list, predicted_rts):
             for a in c["annotations"]:
                 auid = a["annotation_uid"]
                 if auid in annotation_uid_to_prediction:
-                    apred = {"query_sets": annotation_uid_to_prediction[auid]}
+                    apred = {
+                        "query_sets": annotation_uid_to_prediction[auid][0],
+                        'annotation_uid': auid, 
+                    }
                 else:
                     apred = {
                         "query_sets": {
                             qid: {"bboxes": [], "score": 0.0}
                             for qid in a["query_sets"].keys()
-                        }
+                        }, 
+                        'annotation_uid': auid,
                     }
                 clip_predictions["predictions"].append(apred)
             video_predictions["clips"].append(clip_predictions)
-        predictions["videos"].append(video_predictions)
+        predictions["results"]["videos"].append(video_predictions)
     return predictions
 
 
 @hydra.main(config_path="vq2d", config_name="config")
 def main(cfg: DictConfig) -> None:
     # Load annotations
-    annot_path = osp.join(cfg.data.annot_root, f"test_unannotated.json")
+    annot_path = osp.join(cfg.data.annot_root, f"vq_test_unannotated.json")
     with open(annot_path) as fp:
         annotations = json.load(fp)
     annotations_list = convert_annotations_to_list(annotations)
