@@ -1,3 +1,5 @@
+**[NEW!] Detailed examples for VQ Challenge submission available here: [VQ2D README](./VQ2D/README.md)**
+
 **[NEW!] 2022 Ego4D Challenges now open for Episodic Memory**
 - [Natural Language Queries](https://eval.ai/web/challenges/challenge-page/1629/overview) (deadline June 1 2022)
 - [Visual Queries 2D](https://eval.ai/web/challenges/challenge-page/1619/overview) (deadline June 1 2022)
@@ -7,7 +9,6 @@
 Please note that:
 - VQ test annotations for challenge submissions are now available: [Ego4D Challenges](https://ego4d-data.org/docs/challenge/)
 - NLQ annotations have a known issue where ~14% of annotations have a near-0 query window and will result in under reported performance for the challenge (which will be corrected with a future dataset update): [NLQ Forum Post](https://discuss.ego4d-data.org/t/nlq-annotation-zero-temporal-windows/36)
-
 
 # Ego4D Episodic Memory Benchmark
 
