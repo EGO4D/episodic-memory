@@ -2,6 +2,7 @@ import codecs
 import multiprocessing
 import os
 from collections import Counter
+from typing import List, Optional
 
 import numpy as np
 from nltk.tokenize import word_tokenize
@@ -19,14 +20,20 @@ PAD, UNK = "<PAD>", "<UNK>"
 
 
 class EpisodicNLQProcessor:
-    def __init__(self):
+    def __init__(self, remove_empty_queries_from: Optional[List[str]]):
         super(EpisodicNLQProcessor, self).__init__()
         self.idx_counter = 0
+        self.remove_empty_queries_from = (
+            set()
+            if remove_empty_queries_from is None else
+            set(remove_empty_queries_from)
+        )
 
     def reset_idx_counter(self):
         self.idx_counter = 0
 
     def process_data_tan(self, data, scope):
+        skipped = 0
         results = []
         for vid, data_item in tqdm(
             data.items(), total=len(data), desc=f"process episodic nlq {scope}"
@@ -60,8 +67,15 @@ class EpisodicNLQProcessor:
                     "annotation_uid": ann_uid,
                     "query_idx": query_idx,
                 }
+                if (
+                    abs(exact_time[0] - exact_time[1]) <= 1/30 and
+                    scope in self.remove_empty_queries_from
+                ):
+                    skipped += 1
+                    continue
                 results.append(record)
                 self.idx_counter += 1
+        print(f"{scope}: skipped = {skipped}, remaining = {len(results)}")
         return results
 
     def convert(self, data_dir, predictor=None):
@@ -304,7 +318,7 @@ def gen_or_load_dataset(configs):
     for vid, vfeat_len in vfeat_lens.items():
         vfeat_lens[vid] = min(configs.max_pos_len, vfeat_len)
     # load data
-    processor = EpisodicNLQProcessor()
+    processor = EpisodicNLQProcessor(configs.remove_empty_queries_from)
 
     train_data, val_data, test_data = processor.convert(
         data_dir, predictor=configs.predictor

@@ -39,6 +39,12 @@ def read_command_line():
         default=1,
         help="Number of CPU workers to process the data",
     )
+    parser.add_argument(
+        "--data_loader_workers",
+        type=int,
+        default=0,
+        help="Number of CPU workers for the dataloader",
+    )
     # model parameters
     parser.add_argument("--word_size", type=int, default=None, help="number of words")
     parser.add_argument(
@@ -115,12 +121,87 @@ def read_command_line():
         default="checkpoints",
         help="path to save trained model weights",
     )
-    parser.add_argument("--model_name", type=str, default="vslnet", help="model name")
+    parser.add_argument("--model_name", type=str, default="vslnet", help="model name")  # noqa
     parser.add_argument(
         "--suffix",
         type=str,
         default=None,
         help="set to the last `_xxx` in ckpt repo to eval results",
+    )
+    parser.add_argument(
+        "--log_to_tensorboard",
+        type=str,
+        default=None,
+        help="Comment for the run. Supports multiple runs",
+    )
+    parser.add_argument(
+        "--tb_log_dir",
+        type=str,
+        default="./runs",
+        help="Where the tensorboard logdir is located",
+    )
+    parser.add_argument(
+        "--tb_log_freq",
+        type=int,
+        default=1,
+        help="Log every `tb_log_freq` iterations",
+    )
+    parser.add_argument(
+        "--slurm",
+        dest="slurm",
+        action="store_true",
+        default=False,
+        help="Schedule with slurm?",
+    )
+    parser.add_argument(
+        "--slurm_wait",
+        dest="slurm_wait",
+        action="store_true",
+        default=False,
+        help="Wait for slurm to finish?",
+    )
+    parser.add_argument(
+        "--slurm_partition",
+        type=str,
+        default="pixar",
+        help="Which slurm partition?",
+    )
+    parser.add_argument(
+        "--slurm_constraint",
+        type=str,
+        default="volta",
+        help="Constraint on slurm",
+    )
+    parser.add_argument(
+        "--slurm_gpus",
+        type=int,
+        default=1,
+        help="number of gpus to schedule with slurm",
+    )
+    parser.add_argument(
+        "--slurm_cpus",
+        type=int,
+        default=10,
+        help="number of cpus to schedule with slurm",
+    )
+    parser.add_argument(
+        "--slurm_timeout_min",
+        type=int,
+        default=720,
+        help="How many minutes to schedule",
+    )
+    parser.add_argument(
+        "--slurm_log_folder",
+        type=str,
+        default="slurm_log",
+        help="where to keep slurm logs",
+    )
+    parser.add_argument(
+        "--remove_empty_queries_from",
+        type=str,
+        nargs="+",
+        default=None,
+        help="A list of splits to remove empty queries from. Valid values for the list are: ['train', 'val']",  # noqa
     )
     configs = parser.parse_args()
     return configs, parser

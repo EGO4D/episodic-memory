@@ -7,6 +7,8 @@ import numpy as np
 import options
 import torch
 import torch.nn as nn
+import submitit
+from torch.utils.tensorboard.writer import SummaryWriter
 from model.VSLNet import build_optimizer_and_scheduler, VSLNet
 from tqdm import tqdm
 from utils.data_gen import gen_or_load_dataset
@@ -42,9 +44,6 @@ def main(configs, parser):
     train_loader = get_train_loader(
         dataset=dataset["train_set"], video_features=visual_features, configs=configs
     )
-    train_eval_loader = get_test_loader(
-        dataset=dataset["train_set"], video_features=visual_features, configs=configs
-    )
     val_loader = (
         None
         if dataset["val_set"] is None
@@ -55,8 +54,6 @@ def main(configs, parser):
     )
     configs.num_train_steps = len(train_loader) * configs.epochs
     num_train_batches = len(train_loader)
-    num_val_batches = 0 if val_loader is None else len(val_loader)
-    num_test_batches = len(test_loader)
 
     # Device configuration
     cuda_str = "cuda" if configs.gpu_idx is None else "cuda:{}".format(configs.gpu_idx)
@@ -75,9 +72,17 @@ def main(configs, parser):
             ]
         ),
     )
+
     if configs.suffix is not None:
         home_dir = home_dir + "_" + configs.suffix
     model_dir = os.path.join(home_dir, "model")
+
+    writer = None
+    if configs.log_to_tensorboard is not None:
+        log_dir = os.path.join(configs.tb_log_dir, configs.log_to_tensorboard)
+        os.makedirs(log_dir, exist_ok=True)
+        print(f"Writing to tensorboard: {log_dir}")
+        writer = SummaryWriter(log_dir=log_dir)
 
     # train and test
     if configs.mode.lower() == "train":
@@ -166,6 +171,13 @@ def main(configs, parser):
                 )  # clip gradient
                 optimizer.step()
                 scheduler.step()
+                if writer is not None and global_step % configs.tb_log_freq == 0:
+                    writer.add_scalar("Loss/Total", total_loss.detach().cpu(), global_step)
+                    writer.add_scalar("Loss/Loc", loc_loss.detach().cpu(), global_step)
+                    writer.add_scalar("Loss/Highlight", highlight_loss.detach().cpu(), global_step)
+                    writer.add_scalar("Loss/Highlight (*lambda)", (configs.highlight_lambda * highlight_loss.detach().cpu()), global_step)
+                    writer.add_scalar("LR", optimizer.param_groups[0]["lr"], global_step)
+
                 # evaluate
                 if (
                     global_step % eval_period == 0
@@ -180,7 +192,7 @@ def main(configs, parser):
                         f"{configs.model_name}_{epoch}_{global_step}_preds.json",
                     )
                     # Evaluate on val, keep the top 3 checkpoints.
-                    results, mIoU, score_str = eval_test(
+                    results, mIoU, (score_str, score_dict) = eval_test(
                         model=model,
                         data_loader=val_loader,
                         device=device,
@@ -191,6 +203,11 @@ def main(configs, parser):
                         result_save_path=result_save_path,
                     )
                     print(score_str, flush=True)
+                    if writer is not None:
+                        for name, value in score_dict.items():
+                            kk = name.replace("\n", " ")
+                            writer.add_scalar(f"Val/{kk}", value, global_step)
+
                     score_writer.write(score_str)
                     score_writer.flush()
                     # Recall@1, 0.3 IoU overlap --> best metric.
@@ -206,6 +223,7 @@ def main(configs, parser):
                         # only keep the top-3 model checkpoints
                         filter_checkpoints(model_dir, suffix="t7", max_to_keep=3)
                     model.train()
+            
         score_writer.close()
 
     elif configs.mode.lower() == "test":
@@ -235,6 +253,29 @@ def main(configs, parser):
         print(score_str, flush=True)
 
 
+def create_executor(configs):
+    executor = submitit.AutoExecutor(folder=configs.slurm_log_folder)
+
+    executor.update_parameters(
+        timeout_min=configs.slurm_timeout_min,
+        constraint=configs.slurm_constraint,
+        slurm_partition=configs.slurm_partition,
+        gpus_per_node=configs.slurm_gpus,
+        cpus_per_task=configs.slurm_cpus,
+    )
+    return executor
+
+
 if __name__ == "__main__":
     configs, parser = options.read_command_line()
-    main(configs, parser)
+    if not configs.slurm:
+        main(configs, parser)
+    else:
+        executor = create_executor(configs)
+
+        job = executor.submit(main, configs, parser)
+        print("job=", job.job_id)
+
+        # wait for it
+        if configs.slurm_wait:
+            job.result()
