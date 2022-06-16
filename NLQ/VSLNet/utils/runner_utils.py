@@ -140,11 +140,11 @@ def eval_test(
             predictions, ground_truth, thresholds, topK
         )
         title = f"Epoch {epoch}, Step {global_step}"
-        score_str = ego4d_eval.display_results(
+        display_results = ego4d_eval.display_results(
             results, mIoU, thresholds, topK, title=title
         )
     else:
         results = None
         mIoU = None
-        score_str = None
-    return results, mIoU, score_str
+        display_results = None
+    return results, mIoU, display_results

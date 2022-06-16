@@ -117,6 +117,8 @@ def get_train_loader(dataset, video_features, configs):
         dataset=train_set,
         batch_size=configs.batch_size,
         shuffle=True,
+        pin_memory=True,
+        num_workers=configs.data_loader_workers,
         collate_fn=train_collate_fn,
     )
     return train_loader
@@ -128,6 +130,8 @@ def get_test_loader(dataset, video_features, configs):
         dataset=test_set,
         batch_size=configs.batch_size,
         shuffle=False,
+        pin_memory=True,
+        num_workers=configs.data_loader_workers,
         collate_fn=test_collate_fn,
     )
     return test_loader

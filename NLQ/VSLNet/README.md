@@ -9,8 +9,20 @@ Localization" (ACL 2020, long paper, [ACL](vslnet_acl),
 
 ## Prerequisites
 
-The prerequisites and setup instructions can be found in the parent repository for VSLNet [here][vslnet_code].
+This repository is based off [VSLNet][vslnet_code]. This has additional support for SLURM scheduling.
 
+### Environment setup
+
+In a pre-existing conda environment or pyenv:
+```
+pip install -r requirements.txt
+```
+
+### Data
+
+```
+python3.9 -m nltk.downloader punkt
+```
 
 ## Preparation
 
@@ -48,6 +60,7 @@ Download the official video features released from [official webpage][ego4d_page
 python main.py \
     --task nlq_official_v1 \
     --predictor bert \
+    --dim 128 \
     --mode train \
     --video_feature_dim 2304 \
     --max_pos_len 128 \
@@ -55,7 +68,8 @@ python main.py \
     --fv official \
     --num_workers 64 \
     --model_dir checkpoints/ \
-    --eval_gt_json "data/nlq_val.json"
+    --eval_gt_json "data/nlq_val.json" \
+    --log_to_tensoboard "baseline"
 
 
 # To predict on test set.
@@ -77,6 +91,27 @@ python utils/evaluate_ego4d_nlq.py \
     --thresholds 0.3 0.5 \
     --topK 1 3 5
 ```
+
+### SLURM
+
+We support scheduling with a SLURM cluster with the [submit][submitit_library]
+library.  Please provide the flags: `--slurm`, `--slurm_partition <str>` and
+`--slurm_timeout_min <int>` to schedule with SLURM. Please provide these flags
+to `main.py`.
+
+### Filter 0s Queries
+
+There are queries that are of duration 0s. This is an artifact of the
+annotation data. This affects ~14% of the data. You can filter these out via
+appending `--remove_empty_queries_from` to `main.py`.
+
+### Tensorboard
+
+Tensorboard will log to loss and validation metrics to `--tb_log_dir`. Losses
+will be logged every `--tb_log_freq`, which defaults to every iteration. You can specify the name of the log (for multiple logs) with
+`--log_to_tensorboard`.
+
+By default, tensorboard will not be logged unless a parameter to `--log_to_tensorboard` is provided.
 
 ## Results
 
@@ -122,3 +157,4 @@ If you are using this baseline, please also cite the original work:
 [vslnet_acl]: https://www.aclweb.org/anthology/2020.acl-main.585.pdf
 [vslnet_code]: https://github.com/IsaacChanghau/VSLNet
 [nlq_readme]:./../README.md
+[submitit_library]: https://github.com/facebookincubator/submitit
