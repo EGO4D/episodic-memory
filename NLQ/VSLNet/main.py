@@ -107,6 +107,7 @@ def main(configs, parser):
         )
         print("start training...", flush=True)
         global_step = 0
+        num_examples = 0
         for epoch in range(configs.epochs):
             model.train()
             for data in tqdm(
@@ -125,6 +126,7 @@ def main(configs, parser):
                     e_labels,
                     h_labels,
                 ) = data
+                num_examples += vfeats.shape[0]
                 # prepare features
                 vfeats, vfeat_lens = vfeats.to(device), vfeat_lens.to(device)
                 s_labels, e_labels, h_labels = (
@@ -173,10 +175,10 @@ def main(configs, parser):
                 scheduler.step()
                 if writer is not None and global_step % configs.tb_log_freq == 0:
                     writer.add_scalar("Loss/Total", total_loss.detach().cpu(), global_step)
-                    writer.add_scalar("Loss/Loc", loc_loss.detach().cpu(), global_step)
-                    writer.add_scalar("Loss/Highlight", highlight_loss.detach().cpu(), global_step)
-                    writer.add_scalar("Loss/Highlight (*lambda)", (configs.highlight_lambda * highlight_loss.detach().cpu()), global_step)
-                    writer.add_scalar("LR", optimizer.param_groups[0]["lr"], global_step)
+                    writer.add_scalar("Loss/Loc", loc_loss.detach().cpu(), num_examples)
+                    writer.add_scalar("Loss/Highlight", highlight_loss.detach().cpu(), num_examples)
+                    writer.add_scalar("Loss/Highlight (*lambda)", (configs.highlight_lambda * highlight_loss.detach().cpu()), num_examples)
+                    writer.add_scalar("LR", optimizer.param_groups[0]["lr"], num_examples)
 
                 # evaluate
                 if (
@@ -206,7 +208,7 @@ def main(configs, parser):
                     if writer is not None:
                         for name, value in score_dict.items():
                             kk = name.replace("\n", " ")
-                            writer.add_scalar(f"Val/{kk}", value, global_step)
+                            writer.add_scalar(f"Val/{kk}", value, num_examples)
 
                     score_writer.write(score_str)
                     score_writer.flush()
@@ -217,7 +219,7 @@ def main(configs, parser):
                             model.state_dict(),
                             os.path.join(
                                 model_dir,
-                                "{}_{}.t7".format(configs.model_name, global_step),
+                                "{}_{}.t7".format(configs.model_name, num_examples),
                             ),
                         )
                         # only keep the top-3 model checkpoints
