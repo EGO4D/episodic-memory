@@ -24,10 +24,10 @@ if __name__ == '__main__':
         print("a. Generate detections!")
         gen_det_ego4d(opt)   # Not knowing video categories
 
-        print("b. Evaluate the detection results!")
-        eval_det_ego4d(opt)
-
-        print("Detection evaluation finishes! \n")
+        if 'val' in opt['infer_datasplit']:
+            print("b. Evaluate the detection results!")
+            eval_det_ego4d(opt)
+            print("Detection evaluation finishes! \n")
 
     if opt['eval_stage'] == 'eval_retrieval' or opt['eval_stage'] == 'all':
 
@@ -38,6 +38,7 @@ if __name__ == '__main__':
         print("a. Generate retrieval!")
         gen_retrieval(opt)
 
-        print("b. Evaluate the retrieval results!")
-        eval_retrieval(opt)
-        print("Detection evaluation finishes! \n")
+        if 'val' in opt['infer_datasplit']:
+            print("b. Evaluate the retrieval results!")
+            eval_retrieval(opt)
+            print("Detection evaluation finishes! \n")

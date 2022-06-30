@@ -164,7 +164,7 @@ class ANETdetection(object):
             return prediction_by_label.get_group(cidx).reset_index(drop=True)
         except:
             if self.verbose:
-                print('Warning: No predictions of label \'%s\' were provdied.' % label_name)
+                print('Warning: No predictions of label \'%s\' were provided.' % label_name)
             return pd.DataFrame()
 
     def wrapper_compute_average_precision(self):
@@ -208,7 +208,7 @@ class ANETdetection(object):
         self.average_mAP = self.mAP.mean()
 
         if self.verbose:
-            print('[RESULTS] Performance on ActivityNet detection task.')
+            print('[RESULTS] Performance on Ego4D detection task.')
             print('Average-mAP: {}'.format(self.average_mAP))
             print('mAPs are {}'.format(self.mAP))
 

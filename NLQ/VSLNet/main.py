@@ -72,7 +72,6 @@ def main(configs, parser):
             ]
         ),
     )
-
     if configs.suffix is not None:
         home_dir = home_dir + "_" + configs.suffix
     model_dir = os.path.join(home_dir, "model")
