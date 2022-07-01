@@ -1,5 +1,4 @@
 import json
-import pandas as pd
 import torch
 import os
 
@@ -8,7 +7,7 @@ import os
 ######################################################################################################
 annotation_path = "../../annotations/"  # Change to your own path containing canonical annotation files
 feat_path = "video_features/"  # Change to your own path containing features of canonical videos
-info_path = annotation_path + 'manifest.csv'
+info_path = annotation_path + 'ego4d.json'
 annot_path_train = annotation_path + 'moments_train.json'
 annot_path_val = annotation_path + 'moments_val.json'
 annot_path_test = annotation_path + 'moments_test_unannotated.json'
@@ -22,7 +21,15 @@ with open(annot_path_val, 'r') as f:
 with open(annot_path_test, 'r') as f:
     v_annot_test = json.load(f)
 
-feat_info=pd.read_csv(info_path)
+with open(info_path, 'r') as f:
+    feat_info=json.load(f)
+
+v_all_duration = {}
+for video in feat_info['videos']:
+    v_id = video['video_uid']
+    v_dur = video['duration_sec']
+    v_all_duration[v_id] = v_dur
+
 v_annot = {}
 v_annot['videos'] = v_annot_train['videos'] + v_annot_val['videos'] + v_annot_test['videos']
 
@@ -33,7 +40,7 @@ clip_annot_1 = {}
 for video in v_annot['videos']:
     vid = video['video_uid']
     clips = video['clips']
-    v_duration = feat_info[feat_info.video_uid == vid].canonical_video_duration_sec.values[0]
+    v_duration = v_all_duration[vid] #feat_info[feat_info.video_uid == vid].canonical_video_duration_sec.values[0]
     try:
         feats = torch.load(os.path.join(feat_path, vid + '.pt'))
     except:
