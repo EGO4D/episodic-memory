@@ -13,22 +13,29 @@ Create a conda environment and install required packages from scratch following 
     conda install -c conda-forge matplotlib 
     conda install -c conda-forge urllib3
 ```
-
+### Annotation conversion 
+If you use the canonical annotation files, you need to first convert them by removing unused 
+categories and video clips
+```
+    python Convert_annotation.py
+```
 
 ### Training
-
 ```    
-     python Train.py [--use_xGPN] --is_train true --dataset ego4d --feature_path {DATA_PATH} --checkpoint_path {CHECKPOINT_PATH} --batch_size 32 --train_lr 0.0001
+     python Train.py --use_xGPN --is_train true --dataset ego4d --feature_path {DATA_PATH} --checkpoint_path {CHECKPOINT_PATH} --batch_size 32 --train_lr 0.0001
 ```
 ### Inference
 ```
-     python Infer.py  [--use_xGPN] --is_train false --dataset ego4d --feature_path {DATA_PATH} --checkpoint_path {CHECKPOINT_PATH}  --output_path {OUTPUT_PATH}   
+     python Infer.py  --use_xGPN --is_train false --dataset ego4d --feature_path {DATA_PATH} --checkpoint_path {CHECKPOINT_PATH}  --output_path {OUTPUT_PATH}   
 ```
 ### Evaluation
 ```
-     python Eval.py --dataset ego4d --output_path [OUTPUT_PATH] --out_prop_map {OUT_PMAP} --eval_stage all
+     python Eval.py --dataset ego4d --output_path {OUTPUT_PATH} --out_prop_map {OUT_PMAP} --eval_stage all
 ```
-
+### Generate a submission file for the Ego4D Moment Queries challenge
+```
+    python Merge_detection_retrieval.py
+```
 
 ## Acknowledgements
 

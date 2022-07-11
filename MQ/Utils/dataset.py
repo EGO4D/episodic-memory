@@ -89,7 +89,7 @@ class VideoDataSet(data.Dataset):
         v_data = torch.load(os.path.join(self.feature_path, video_name + '.pt'))
         v_data = torch.transpose(v_data, 0, 1)
         num_frms_v = v_data.shape[-1]
-        fps_v = num_frms_v / clip_info['v_duration']
+        fps_v = clip_info['fps']
 
         clip_start = int(clip_info['parent_start_sec'] * fps_v)
         clip_end = min(int(clip_info['parent_end_sec'] * fps_v), num_frms_v-1)
@@ -98,11 +98,6 @@ class VideoDataSet(data.Dataset):
         win_data = v_data[:, clip_start: clip_end+1]
         num_frms = min(win_data.shape[-1], self.temporal_scale)
         video_data[:, :num_frms] = win_data[:, :num_frms]
-        
-        # print(f'num_frms_v: {num_frms_v}')
-        # print(f'fps_v: {fps_v}')
-        # print(f'clip_start {clip_start}')
-        # print(f'clip_end {clip_end}')
         if self.mode == 'train':
             match_score_action, match_score_start, match_score_end, gt_bbox_padding, num_gt, num_frms = \
                 self._get_train_data_label_org(num_frms, clip_name, fps_v)
