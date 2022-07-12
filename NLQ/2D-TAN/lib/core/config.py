@@ -49,6 +49,7 @@ config.DATASET.ROOT = ''
 config.DATASET.NAME = ''
 config.DATASET.MODALITY = ''
 config.DATASET.VIS_INPUT_TYPE = ''
+config.DATASET.TXT_FEATURE = 'bert'
 config.DATASET.NO_VAL = False
 config.DATASET.BIAS = 0
 config.DATASET.NUM_SAMPLE_CLIPS = 256

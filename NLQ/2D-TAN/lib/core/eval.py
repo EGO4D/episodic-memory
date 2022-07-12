@@ -1,6 +1,7 @@
 import json
 import argparse
 import numpy as np
+import pickle as pkl
 from terminaltables import AsciiTable
 
 from core.config import config, update_config
@@ -59,7 +60,6 @@ def eval(segments, data):
     max_recall = max(recalls)
     average_iou = []
     for seg, dat in zip(segments, data):
-        seg = nms(seg, thresh=config.TEST.NMS_THRESH, top_k=max_recall).tolist()
         overlap = iou(seg, [dat['times']])
         average_iou.append(np.mean(np.sort(overlap[0])[-3:]))
 
@@ -72,7 +72,33 @@ def eval(segments, data):
 
     return eval_result, miou
 
-def eval_predictions(segments, data, verbose=True):
+def eval_predictions(segments, data, verbose=True, merge_window=False):
+    if merge_window:
+        merge_seg = {}
+        merge_data = {}
+        for seg, dat in zip(segments, data):
+            pair_id = dat['query_uid'] # + '_' + str(dat['query_idx'])
+            if pair_id not in merge_seg.keys(): # new 
+                merge_data[pair_id] = {
+                    'video': dat['video'],
+                    'duration': dat['clip_duration'],
+                    'times': dat['times'],
+                    'description': dat['description'],
+                }
+                merge_seg[pair_id] = []
+            offset = dat['window'][0]
+            merge_seg[pair_id].extend([[se[0]+offset, se[1]+offset, se[2]] for se in seg])
+        segments, data = [], []
+        for k in merge_seg.keys():
+            # random.shuffle(merge_seg)
+            segments.append(sorted(merge_seg[k], key=lambda x: x[2], reverse=True))
+            data.append(merge_data[k])
+
+    segments = [nms(seg, thresh=config.TEST.NMS_THRESH, top_k=5).tolist() for seg in segments]
+
+    with open('results.pickle', 'wb') as f:
+        pkl.dump({'prediction':segments,'data':data},f)
+
     eval_result, miou = eval(segments, data)
     if verbose:
         print(display_results(eval_result, miou, ''))
