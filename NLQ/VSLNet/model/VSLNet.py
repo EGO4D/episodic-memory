@@ -13,6 +13,7 @@ from model.layers import (
     ConditionedPredictor,
     HighLightLayer,
     BertEmbedding,
+    STEmbedding,
 )
 
 
@@ -87,6 +88,10 @@ class VSLNet(nn.Module):
             # init parameters
             self.init_parameters()
             self.embedding_net = BertEmbedding(configs.text_agnostic)
+        elif configs.predictor == "st":
+            self.query_affine = nn.Linear(768, configs.dim)
+            self.init_parameters()
+            self.embedding_net = STEmbedding(configs.text_agnostic)
         else:
             self.embedding_net = Embedding(
                 num_words=configs.word_size,
@@ -120,10 +125,18 @@ class VSLNet(nn.Module):
         if self.configs.predictor == "bert":
             query_features = self.embedding_net(word_ids)
             query_features = self.query_affine(query_features)
+        elif self.configs.predictor == "st":
+            query_features = self.embedding_net(word_ids, q_mask)
+            query_features = self.query_affine(query_features)
         else:
             query_features = self.embedding_net(word_ids, char_ids)
 
-        query_features = self.feature_encoder(query_features, mask=q_mask)
+        if len(query_features.shape) == 2:
+            query_features.unsqueeze_(1)
+            q_mask = torch.ones((query_features.shape[0], 1), device=q_mask.device)
+        else:
+            query_features = self.feature_encoder(query_features, mask=q_mask)
+
         video_features = self.feature_encoder(video_features, mask=v_mask)
         features = self.cq_attention(video_features, query_features, v_mask, q_mask)
         features = self.cq_concat(features, query_features, q_mask)
