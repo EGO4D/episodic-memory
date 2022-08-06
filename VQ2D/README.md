@@ -54,7 +54,7 @@
     # Move out vq annotations to $VQ2D_ROOT/data
     mv $VQ2D_ROOT/data/v1/annotations/vq_*.json $VQ2D_ROOT/data
     ```
-2. **[New]** We have released an updated version (v1.0.5) of the VQ2D annotations which includes fixes to a subset of data. These primarily affect the train and val splits (and not test split). In local experiments, we find that this leads to improved baseline performance on the val split. To use this updated data:
+2. **[New]** We have released an updated version (v1.0.5) of the VQ2D annotations which includes fixes to a subset of data (check details [here](https://eval.ai/web/challenges/challenge-page/1843/overview)). These primarily affect the train and val splits (and not test split). In local experiments, we find that this leads to improved baseline performance on the val split. To use this updated data:
     ```
     # Download the data using the Ego4D CLI. 
     ego4d --output_directory="$VQ2D_ROOT/data" --datasets annotations -y --version v1_0_5
