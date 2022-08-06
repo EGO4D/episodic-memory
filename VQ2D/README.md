@@ -48,19 +48,27 @@
 
 1. Download the annotations and videos as instructed [here](https://github.com/facebookresearch/Ego4d/blob/main/ego4d/cli/README.md) to `$VQ2D_ROOT/data`.
     ```
-    python -m ego4d.cli.cli --output_directory="$VQ2D_ROOT/data" --datasets full_scale annotations
+    ego4d --output_directory="$VQ2D_ROOT/data" --datasets full_scale annotations
     # Define ego4d videos directory
     export EGO4D_VIDEOS_DIR=$VQ2D_ROOT/data/v1/full_scale
     # Move out vq annotations to $VQ2D_ROOT/data
     mv $VQ2D_ROOT/data/v1/annotations/vq_*.json $VQ2D_ROOT/data
     ```
+2. **[New]** We have released an updated version (v1.0.5) of the VQ2D annotations which includes fixes to a subset of data (check details [here](https://eval.ai/web/challenges/challenge-page/1843/overview)). These primarily affect the train and val splits (and not test split). In local experiments, we find that this leads to improved baseline performance on the val split. To use this updated data:
+    ```
+    # Download the data using the Ego4D CLI. 
+    ego4d --output_directory="$VQ2D_ROOT/data" --datasets annotations -y --version v1_0_5
 
-2. Process the VQ dataset.
+    # Move out vq annotations to $VQ2D_ROOT/data
+    mv $VQ2D_ROOT/data/v1_0_5/annotations/vq_*.json $VQ2D_ROOT/data
+    ```
+
+3. Process the VQ dataset.
     ```
     python process_vq_dataset.py --annot-root data --save-root data
     ```
 
-3. Extract clips for validation and test data from videos.
+4. Extract clips for validation and test data from videos.
     ```
     python convert_videos_to_clips.py \
         --annot-paths data/vq_val.json data/vq_test_unannotated.json \
@@ -69,7 +77,7 @@
         --num-workers 10 # Increase this for speed
     ```
 
-4. Extract images for train and validation data from videos.
+5. Extract images for train and validation data from videos.
     ```
     python convert_videos_to_images.py \
         --annot-paths data/vq_train.json data/vq_val.json \
@@ -78,7 +86,7 @@
         --num-workers 10 # Increase this for speed
     ```
 
-5. Training a model. Copy `scripts/train_2_gpus.sh` or `scripts/train_8_gpus.sh` to the required experiment directory and execute it.
+6. Training a model. Copy `scripts/train_2_gpus.sh` or `scripts/train_8_gpus.sh` to the required experiment directory and execute it.
     ```
     EXPT_ROOT=<experiment path>
     cp $VQ2D_ROOT/scripts/train_2_gpu.sh $EXPT_ROOT
@@ -86,7 +94,7 @@
     chmod +x train_2_gpu.sh && ./train_2_gpu.sh
     ```
 
-6. Evaluating the baseline for visual queries 2D localization. Copy `scripts/evaluate_vq.sh` to the exxperiment directory, update the paths and checkpoint id, and execute it. Note: To evaluate with the particle filter tracker, add the commandline argument `tracker.type="pfilter"`.
+7. Evaluating the baseline for visual queries 2D localization. Copy `scripts/evaluate_vq.sh` to the exxperiment directory, update the paths and checkpoint id, and execute it. Note: To evaluate with the particle filter tracker, add the commandline argument `tracker.type="pfilter"`.
     ```
     EXPT_ROOT=<experiment path>
     cp $VQ2D_ROOT/scripts/evaluate_vq.sh $EXPT_ROOT
@@ -99,7 +107,7 @@
     python -m ego4d.cli.cli -y --output_directory /path/to/output/ --datasets vq2d_models
     ```
 
-## [NEW] Making predictions for Ego4D challenge
+## [New] Making predictions for Ego4D challenge
 1. Ensure that `vq_test_unannotated.json` is copied to `$VQ2D_ROOT`.
 2. Copy `scripts/get_challenge_predictions.sh` to the experiment directory, update the paths and checkpoint id, and execute it. The arguments are similar to baseline evaluation in the previous section, but the script has been modified to output predictions consistent with the challenge format.
     ```
