@@ -48,7 +48,7 @@
 
 1. Download the annotations and videos as instructed [here](https://github.com/facebookresearch/Ego4d/blob/main/ego4d/cli/README.md) to `$VQ2D_ROOT/data`.
     ```
-    python -m ego4d.cli.cli --output_directory="$VQ2D_ROOT/data" --datasets full_scale annotations
+    ego4d --output_directory="$VQ2D_ROOT/data" --datasets full_scale annotations
     # Define ego4d videos directory
     export EGO4D_VIDEOS_DIR=$VQ2D_ROOT/data/v1/full_scale
     # Move out vq annotations to $VQ2D_ROOT/data
