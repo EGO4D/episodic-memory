@@ -50,7 +50,7 @@ def load_video_features(root, max_position_length):
     filenames = glob.glob(os.path.join(root, extension))
     for filename in tqdm(filenames, total=len(filenames), desc="load video features"):
         video_id = filename.split("/")[-1].split(".")[0]
-        feature = torch.load(filename).numpy()
+        feature = torch.load(filename).to(torch.float32).cpu().numpy()
         if max_position_length is None:
             video_features[video_id] = feature
         else:

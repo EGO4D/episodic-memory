@@ -24,6 +24,8 @@ from utils.runner_utils import (
 
 
 def main(configs, parser):
+    print(f"Running with {configs}", flush=True)
+
     # set tensorflow configs
     set_th_config(configs.seed)
 
@@ -58,6 +60,7 @@ def main(configs, parser):
     # Device configuration
     cuda_str = "cuda" if configs.gpu_idx is None else "cuda:{}".format(configs.gpu_idx)
     device = torch.device(cuda_str if torch.cuda.is_available() else "cpu")
+    print(f"Using device={device}")
 
     # create model dir
     home_dir = os.path.join(
