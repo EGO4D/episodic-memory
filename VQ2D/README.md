@@ -1,5 +1,7 @@
 # Visual Queries 2D localization
 
+Also see the [VQ2D Quickstart Colab Notebook](https://colab.research.google.com/drive/1vtVOQzLarBCspQjH5RtHZ8qzH0VZxrmZ?usp=sharing) that walks through these instructions.
+
 ## Installation instructions
 
 1. Clone the repository from [here](https://github.com/EGO4D/episodic-memory).
