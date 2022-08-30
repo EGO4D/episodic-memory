@@ -2,7 +2,7 @@
 
 **[NEW!] 2022 [Ego4D Challenges](https://ego4d-data.org/docs/challenge/) now open for Episodic Memory**
 - [Natural Language Queries](https://eval.ai/web/challenges/challenge-page/1629/overview)
-- [Visual Queries 2D](https://eval.ai/web/challenges/challenge-page/1619/overview)
+- [Visual Queries 2D](https://eval.ai/web/challenges/challenge-page/1843/overview)
 - [Moments queries](https://eval.ai/web/challenges/challenge-page/1626/overview)
 - [Visual Queries 3D](https://eval.ai/web/challenges/challenge-page/1646/overview)
 
