@@ -38,9 +38,13 @@ The code has been tested with Ubuntu > 16.04 and Python 3.7
 1. Download the data using the [client](https://github.com/facebookresearch/Ego4d/blob/main/ego4d/cli/README.md). Place the data into the ./data folder.
     ```
     python -m ego4d.cli.cli --output_directory ~/episodic-memory/VQ3D/data/ --dataset full_scale --universities unict
-    python -m ego4d.cli.cli --output_directory ~/episodic-memory/VQ3D/data/ --dataset clips --universities unict
     python -m ego4d.cli.cli --output_directory ~/episodic-memory/VQ3D/data/ --dataset annotations
     python -m ego4d.cli.cli --output_directory ~/episodic-memory/VQ3D/data/ --dataset 3d
+    ```
+
+2. [UPDATE] construct the 5fps clips using the [VQ2D tools](https://github.com/EGO4D/episodic-memory/tree/main/VQ2D). (clips downloaded directly from the client are at 30fps. In the VQ tasks we use 5fps.)
+    ```
+    python convert_videos_to_clips.py
     ```
 
 2. Generate the `<split>_annot.json` following the instruction under the VQ2D [folder](https://github.com/EGO4D-Consortium/episodic-memory/tree/main/VQ2D) - step 2 from the “Running experiments” section. Place the files under ./data/
@@ -118,6 +122,8 @@ cd camera_pose_estimation/
         --scans_dir data/v1/3d/scans/ \
         --output_dir data/v1/clips_camera_poses/ \
     ```
+
+* Note: Camera pose estimation results on the val set have been included for reference here: `data/all_clips_camera_poses_val.json`
 
 ### Depth estimation
 ```

@@ -146,6 +146,16 @@ if __name__=='__main__':
     vq2d_pred = parse_VQ2D_predictions(args.vq2d_results)
     vq2d_mapping = parse_VQ2D_mapper(args.vq2d_annot)
 
+    # Load mapping VQ2D to VQ3D queries/annotations
+    if 'val' in args.vq2d_queries:
+        split='val'
+    elif 'train' in args.vq2d_queries:
+        split='train'
+    else:
+        raise ValueError
+    query_matching_filename=f'data/mapping_vq2d_to_vq3d_queries_annotations_{split}.json'
+    query_matching = json.load(open(query_matching_filename, 'r'))
+
     helper = VisualQuery3DGroundTruth()
 
     cpt_valid_queries = 0
@@ -156,13 +166,17 @@ if __name__=='__main__':
             for ai, annot in enumerate(clip['annotations']):
                 if not annot: continue
                 for qset_id, qset in annot['query_sets'].items():
-                    object_title=qset['object_title']
-                    assert qset['object_title']==vq2d_queries[video_uid][clip_uid][ai][qset_id]['object_title']
-                    query_frame=vq2d_queries[video_uid][clip_uid][ai][qset_id]['query_frame']
-                    oW=vq2d_queries[video_uid][clip_uid][ai][qset_id]["visual_crop"]["original_width"]
-                    oH=vq2d_queries[video_uid][clip_uid][ai][qset_id]["visual_crop"]["original_height"]
 
-                    dataset_uid=vq2d_mapping[video_uid][clip_uid][qset_id][query_frame][0]['dataset_uid']
+                    mapping_ai=query_matching[video_uid][clip_uid][str(ai)][qset_id]['ai']
+                    mapping_qset_id=query_matching[video_uid][clip_uid][str(ai)][qset_id]['qset_id']
+
+                    object_title=qset['object_title']
+                    assert qset['object_title']==vq2d_queries[video_uid][clip_uid][mapping_ai][mapping_qset_id]['object_title']
+                    query_frame=vq2d_queries[video_uid][clip_uid][mapping_ai][mapping_qset_id]['query_frame']
+                    oW=vq2d_queries[video_uid][clip_uid][mapping_ai][mapping_qset_id]["visual_crop"]["original_width"]
+                    oH=vq2d_queries[video_uid][clip_uid][mapping_ai][mapping_qset_id]["visual_crop"]["original_height"]
+
+                    dataset_uid=vq2d_mapping[video_uid][clip_uid][mapping_qset_id][query_frame][0]['dataset_uid']
 
                     # get intrinsics
                     camera_intrinsics = np.loadtxt(os.path.join(root_dir,
@@ -194,7 +208,7 @@ if __name__=='__main__':
 
                     # get RT frames with poses
                     if args.use_gt:
-                        response_track=vq2d_queries[video_uid][clip_uid][ai][qset_id]["response_track"]
+                        response_track=vq2d_queries[video_uid][clip_uid][mapping_ai][mapping_qset_id]["response_track"]
                         for i, frame in enumerate(response_track):
                             frame_index = frame['frame_number']
 

@@ -149,6 +149,16 @@ if __name__=='__main__':
     vq2d_pred = parse_VQ2D_predictions(args.vq2d_results)
     vq2d_mapping = parse_VQ2D_mapper(args.vq2d_annot)
 
+    # Load mapping VQ2D to VQ3D queries/annotations
+    if 'val' in args.vq2d_queries:
+        split='val'
+    elif 'train' in args.vq2d_queries:
+        split='train'
+    else:
+        raise ValueError
+    query_matching_filename=f'data/mapping_vq2d_to_vq3d_queries_annotations_{split}.json'
+    query_matching = json.load(open(query_matching_filename, 'r'))
+
     for video in vq3d_queries['videos']:
         video_uid = video['video_uid']
         for clip in video['clips']:
@@ -156,14 +166,18 @@ if __name__=='__main__':
             for ai, annot in enumerate(clip['annotations']):
                 if not annot: continue
                 for qset_id, qset in annot['query_sets'].items():
-                    assert qset['object_title']==vq2d_queries[video_uid][clip_uid][ai][qset_id]['object_title']
-                    query_frame=vq2d_queries[video_uid][clip_uid][ai][qset_id]['query_frame']
 
-                    dataset_uid=vq2d_mapping[video_uid][clip_uid][qset_id][query_frame][0]['dataset_uid']
+                    mapping_ai=query_matching[video_uid][clip_uid][str(ai)][qset_id]['ai']
+                    mapping_qset_id=query_matching[video_uid][clip_uid][str(ai)][qset_id]['qset_id']
+
+                    assert qset['object_title']==vq2d_queries[video_uid][clip_uid][mapping_ai][mapping_qset_id]['object_title']
+                    query_frame=vq2d_queries[video_uid][clip_uid][mapping_ai][mapping_qset_id]['query_frame']
+
+                    dataset_uid=vq2d_mapping[video_uid][clip_uid][mapping_qset_id][query_frame][0]['dataset_uid']
 
                     if args.use_gt:
                         response_track = vq2d_pred[dataset_uid]['gt']
-                        response_track=vq2d_queries[video_uid][clip_uid][ai][qset_id]["response_track"]
+                        response_track=vq2d_queries[video_uid][clip_uid][mapping_ai][mapping_qset_id]["response_track"]
                         frame_indices=[x['frame_number'] for x in response_track]
                     else:
                         response_track = vq2d_pred[dataset_uid]['pred'][0]
