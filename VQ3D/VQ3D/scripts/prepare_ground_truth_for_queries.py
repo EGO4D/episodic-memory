@@ -95,11 +95,11 @@ if __name__=='__main__':
             for ai, annot in enumerate(clip['annotations']):
                 if not annot: continue
                 for qset_id, qset in annot['query_sets'].items():
-                    
+
                     mapping_ai=query_matching[video_uid][clip_uid][str(ai)][qset_id]['ai']
                     mapping_qset_id=query_matching[video_uid][clip_uid][str(ai)][qset_id]['qset_id']
 
-                    assert qset['object_title']==vq2d_queries[video_uid][clip_uid][mapping_ai][mapping_qset_id]['object_title']:
+                    assert qset['object_title']==vq2d_queries[video_uid][clip_uid][mapping_ai][mapping_qset_id]['object_title']
                     query_frame=vq2d_queries[video_uid][clip_uid][mapping_ai][mapping_qset_id]['query_frame']
 
                     # -- -- get GT object centroid in world system
