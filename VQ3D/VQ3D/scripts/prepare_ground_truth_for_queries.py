@@ -80,6 +80,8 @@ if __name__=='__main__':
         split='val'
     elif 'train' in args.vq2d_queries:
         split='train'
+    elif 'test' in args.vq2d_queries:
+        split='test'
     else:
         raise ValueError
     query_matching_filename=f'data/mapping_vq2d_to_vq3d_queries_annotations_{split}.json'

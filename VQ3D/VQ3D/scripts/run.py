@@ -151,6 +151,8 @@ if __name__=='__main__':
         split='val'
     elif 'train' in args.vq2d_queries:
         split='train'
+    elif 'test' in args.vq2d_queries:
+        split='test'
     else:
         raise ValueError
     query_matching_filename=f'data/mapping_vq2d_to_vq3d_queries_annotations_{split}.json'
@@ -176,7 +178,8 @@ if __name__=='__main__':
                     oW=vq2d_queries[video_uid][clip_uid][mapping_ai][mapping_qset_id]["visual_crop"]["original_width"]
                     oH=vq2d_queries[video_uid][clip_uid][mapping_ai][mapping_qset_id]["visual_crop"]["original_height"]
 
-                    dataset_uid=vq2d_mapping[video_uid][clip_uid][mapping_qset_id][query_frame][0]['dataset_uid']
+                    dataset_uid=vq2d_mapping[video_uid][clip_uid][qset_id][query_frame][0]['dataset_uid']
+                    #dataset_uid=vq2d_mapping[video_uid][clip_uid][mapping_qset_id][query_frame][0]['dataset_uid']
 
                     # get intrinsics
                     camera_intrinsics = np.loadtxt(os.path.join(root_dir,

@@ -180,5 +180,17 @@ cd VQ3D/
 
 
 
+## [UPDATES] Notes about the Challenge
+
+1. Please use the `vq3d_test_unannotated_template.json` file (under **data/**) for the challenge.
+   These queries are the same as the ones downloaded using the ego4d-client, we have added the 'annotation_uid' entry to help match VQ3D and VQ2D queries.
+
+2. To find the corresponding VQ2D queries you should use the 'annotation_uid' entry found in each VQ3D query.
+   We have also added a `mapping_vq2d_to_vq3d_queries_annotations_test.json` to help find the corresponding queries.
+   Please refer to [these lines](https://github.com/EGO4D/episodic-memory/blob/2118006b2c7a182ff93416cc876bc4623192a4c9/VQ3D/VQ3D/scripts/run.py#L171) to understand how to use it.
+
+3. To create a submission for the challenge you should use the `vq3d_test_unannotated_template.json` file and add the required information directly in it.
+
+
 [1]: https://arxiv.org/abs/2110.07058
 [2]: https://ego4d-data.org/
