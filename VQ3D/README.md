@@ -100,6 +100,7 @@ cd camera_pose_estimation/
         --output_filename data/v1/scan_to_intrinsics.json
     ```
 
+* Note: To help reproducibility camera intrinsics have been added here: `data/scan_to_intrinsics.json`
 
 2. Compute the camera poses
 
@@ -123,7 +124,8 @@ cd camera_pose_estimation/
         --output_dir data/v1/clips_camera_poses/ \
     ```
 
-* Note: Camera pose estimation results on the val set have been included for reference here: `data/all_clips_camera_poses_val.json`
+* Note-1: Camera pose estimation results on the val set have been included for reference here: `data/all_clips_camera_poses_val.json`
+* Note-2: To help reproducibility we are also providing the data for all the intermediate steps to compute the poses for one clip in the val set. You can download that information [here](https://drive.google.com/file/d/1n3dRCrpO0DACfTKwbv3A0YlhFdl6HJm-/view?usp=sharing)
 
 ### Depth estimation
 ```
@@ -178,6 +180,7 @@ cd VQ3D/
 
     ```
 
+* Note: To help reproducibility we provide the results for the val set here: `data/vq3d_results/siam_rcnn_residual_kys_val.json`
 
 
 ## [UPDATES] Notes about the Challenge
