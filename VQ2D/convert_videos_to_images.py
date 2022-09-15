@@ -118,6 +118,8 @@ def video_to_image_fn(inputs):
     video_md = read_video_md(video_path)
     frame_nos_to_save = []
     for clip_data in video_data["clips"]:
+        if clip_data["clip_uid"] is None:
+            continue
         # Create root directory to save clip
         os.makedirs(os.path.join(args.save_root, clip_data["clip_uid"]), exist_ok=True)
         # Get list of frames to save
