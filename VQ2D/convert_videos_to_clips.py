@@ -60,11 +60,22 @@ def extract_clip(video_path, clip_data, save_root):
         clip_data - a clip annotation from the VQ task export
         save_root - path to save extracted images
     """
-    video_md = read_video_md(video_path)
     clip_uid = clip_data["clip_uid"]
-    clip_save_path = os.path.join(save_root, get_clip_name_from_clip_uid(clip_uid))
-    if os.path.isfile(clip_save_path):
+    if clip_uid is None:
         return None
+    clip_save_path = os.path.join(save_root, get_clip_name_from_clip_uid(clip_uid))
+    video_md = read_video_md(video_path)
+    if os.path.isfile(clip_save_path):
+        # If file exists, try loading video metadata
+        try:
+            # Metadata read success
+            test_reader = pims.Video(clip_save_path)
+            test_reader.close()
+            return 0, clip_save_path
+        except:
+            # Metadata read failed
+            print(f"Failed to read video metadata for {clip_save_path}. Recreating.")
+            sp.call(["rm", clip_save_path])
     # Select frames for clip
     clip_fps = int(clip_data["clip_fps"])
     video_fps = int(video_md["fps"])
@@ -127,6 +138,7 @@ def main(args):
         tqdm.tqdm(
             pool.imap_unordered(video_to_clip_fn, inputs),
             total=len(inputs),
+            desc="Converting videos to clips"
         )
     )
 
