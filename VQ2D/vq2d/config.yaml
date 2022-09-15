@@ -8,6 +8,7 @@ data:
   fps: 5.0
   subsample: False
   num_processes: 12
+  num_processes_per_gpu: 2
   batch_size: 12
   debug_mode: False
   debug_count: 5
@@ -34,6 +35,8 @@ model:
   score_thresh: 0.0
   subsampling_factor: 1.0
   recency_factor: 1.0
+  cache_root: ""
+  enable_cache: False
 
 tracker:
   type: "kys" # Options: [ kys | pfilter ]
