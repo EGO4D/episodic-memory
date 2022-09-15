@@ -11,8 +11,9 @@ class Tracker:
 
     valid_trackers = ["pfilter", "kys"]
 
-    def __init__(self, cfg):
+    def __init__(self, cfg, device):
         self.cfg = cfg
+        self.device = device
         assert self.cfg.tracker.type in self.valid_trackers, (
             f"Tracker type {self.cfg.tracker.type} is invalid!"
             f"Please select one of the following: {self.valid_trackers}"
@@ -21,9 +22,9 @@ class Tracker:
 
     def initialize_runner(self):
         if self.cfg.tracker.type == "pfilter":
-            self.tracker = PFRunner(self.cfg)
+            self.tracker = PFRunner(self.cfg, self.device)
         elif self.cfg.tracker.type == "kys":
-            self.tracker = KYSRunner(self.cfg)
+            self.tracker = KYSRunner(self.cfg, self.device)
 
     def __call__(self, *args, **kwargs):
         outputs = self.tracker(*args, **kwargs)

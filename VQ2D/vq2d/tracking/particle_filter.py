@@ -89,13 +89,14 @@ def metric(x, y, sigma=1):
 
 
 class PFRunner(object):
-    def __init__(self, cfg):
+    def __init__(self, cfg, device):
         self.cfg = cfg
+        self.device = device
 
     def __call__(
-        self, init_state, init_frame, search_frames, net, device, *args, **kwargs
+        self, init_state, init_frame, search_frames, net, *args, **kwargs
     ):
-        return run_pfilter(init_state, init_frame, search_frames, self.cfg, net, device)
+        return run_pfilter(init_state, init_frame, search_frames, self.cfg, net, self.device)
 
 
 def run_pfilter(init_state, init_frame, search_frames, cfg, net, device):

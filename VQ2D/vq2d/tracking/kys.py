@@ -2,6 +2,7 @@ import importlib
 
 import cv2
 import numpy as np
+import torch
 from pytracking.features.net_wrappers import NetWithBackbone
 
 from ..structures import BBox
@@ -9,8 +10,10 @@ from .utils import draw_bbox
 
 
 class KYSTracker(object):
-    def __init__(self, model_path):
+    def __init__(self, model_path, device):
         name, parameter_name = "kys", "default"
+        self.device = device
+        torch.cuda.set_device(device)
         # Load tracker parameters
         param_module = importlib.import_module(
             "pytracking.parameter.{}.{}".format(name, parameter_name)
@@ -58,9 +61,9 @@ class KYSTracker(object):
 
 
 class KYSRunner(object):
-    def __init__(self, cfg):
+    def __init__(self, cfg, device):
         self.cfg = cfg
-        self.tracker = KYSTracker(cfg.tracker.kys_tracker.model_path)
+        self.tracker = KYSTracker(cfg.tracker.kys_tracker.model_path, device)
 
     def __call__(self, init_state, init_frame, search_frames, *args, **kwargs):
         return run_kys_tracker(
