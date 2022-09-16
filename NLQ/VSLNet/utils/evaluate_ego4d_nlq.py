@@ -15,23 +15,21 @@ import terminaltables
 
 
 def display_results(results, mIoU, thresholds, topK, title=None):
-    display_data = [
-        [f"Rank@{ii}\nmIoU@{jj}" for ii in topK for jj in thresholds] + ["mIoU"]
-    ]
+    names = [
+        f"Rank@{ii}\nmIoU@{jj}" for ii in topK for jj in thresholds
+    ] + ["mIoU"]
     results *= 100
     mIoU *= 100
-    display_data.append(
-        [
-            f"{results[jj][ii]:.02f}"
-            for ii in range(len(topK))
-            for jj in range(len(thresholds))
-        ]
-        + [f"{mIoU:.02f}"]
-    )
+    values = [
+        results[jj][ii]
+        for ii in range(len(topK))
+        for jj in range(len(thresholds))
+    ] + [mIoU]
+    display_data = [names, [f"{x:.2f}" for x in values]]
     table = terminaltables.AsciiTable(display_data, title)
     for ii in range(len(thresholds) * len(topK)):
         table.justify_columns[ii] = "center"
-    return table.table
+    return table.table, dict(zip(names, values))
 
 
 def compute_IoU(pred, gt):
@@ -124,7 +122,7 @@ def main(args):
     results, mIoU = evaluate_nlq_performance(
         predictions["results"], ground_truth, args["thresholds"], args["topK"]
     )
-    print(display_results(results, mIoU, args["thresholds"], args["topK"]))
+    print(display_results(results, mIoU, args["thresholds"], args["topK"])[0])
 
 
 if __name__ == "__main__":
