@@ -48,4 +48,4 @@ tracker:
     debug: False
   kys_tracker:
     debug: False
-    model_path: "/private/home/sramakri/Research/Ego4D/code/episodic-memory-internal/VQ2D/pretrained_models/kys.pth"
+    model_path: "pretrained_models/kys.pth"

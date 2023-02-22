@@ -58,6 +58,7 @@ class Task:
         clip_uid = self.annot["clip_uid"]
         annotation_uid = self.annot["metadata"]["annotation_uid"]
         query_set = self.annot["metadata"]["query_set"]
+        annot_key = f"{annotation_uid}_{query_set}"
         # Load clip from file
         clip_path = os.path.join(
             data_cfg.data_root, get_clip_name_from_clip_uid(clip_uid)
@@ -73,9 +74,7 @@ class Task:
         cached_bboxes, cached_scores, cache_exists = None, None, False
         if cfg.model.enable_cache:
             assert cfg.model.cache_root != ""
-            cache_path = os.path.join(
-                cfg.model.cache_root, f"{annotation_uid}_{query_set}.pt"
-            )
+            cache_path = os.path.join(cfg.model.cache_root, f"{annot_key}.pt")
             if os.path.isfile(cache_path):
                 cache = torch.load(cache_path)
                 cached_bboxes = cache["ret_bboxes"]
@@ -176,16 +175,14 @@ class Task:
             plt.plot(rt_signal, color="red", label="Pred response track")
             # Plot peak in signal
             plt.plot(peaks, score_signal_sm[peaks], "rx", label="Peaks")
-            save_path = os.path.join(
-                cfg.logging.save_dir, f"example_{annotation_uid}_graph.png"
-            )
+            save_dir = os.path.join(cfg.logging.save_dir, f"visualizations/{annot_key}")
+            os.makedirs(save_dir, exist_ok=True)
+            save_path = os.path.join(save_dir, "graph.png")
             plt.savefig(save_path, dpi=500)
             plt.close()
             ###################### Visualize retrievals ########################
             # Visualize crop
-            save_path = os.path.join(
-                cfg.logging.save_dir, f"example_{annotation_uid}_visual_crop.png"
-            )
+            save_path = os.path.join(save_dir, f"visual_crop.png")
             skimage.io.imsave(save_path, visual_crop_im)
             # Visualize retrievals at the peaks
             for peak_idx in peaks:
@@ -194,22 +191,17 @@ class Task:
                 )
                 for image_idx, image in enumerate(peak_images):
                     save_path = os.path.join(
-                        cfg.logging.save_dir,
-                        f"example_{annotation_uid}_peak_{peak_idx:05d}_rank_{image_idx:03d}.png",
+                        save_dir, f"peak_{peak_idx:05d}_rank_{image_idx:03d}.png"
                     )
                     skimage.io.imsave(save_path, image)
             ################## Visualize response track ########################
-            save_path = os.path.join(
-                cfg.logging.save_dir, f"example_{annotation_uid}_rt.mp4"
-            )
+            save_path = os.path.join(save_dir, f"response_track.mp4")
             writer = imageio.get_writer(save_path)
             for rtf in pred_rt_vis:
                 writer.append_data(rtf)
             writer.close()
             ################## Visualize search window #########################
-            save_path = os.path.join(
-                cfg.logging.save_dir, f"example_{annotation_uid}_sw.mp4"
-            )
+            save_path = os.path.join(save_dir, f"search_window.mp4")
             writer = imageio.get_writer(save_path)
             for sf in search_frames:
                 writer.append_data(sf)
@@ -337,7 +329,7 @@ def convert_annotations_to_list(annotations):
 def format_predictions(annotations, predicted_rts):
     # Format predictions
     predictions = {
-        "version": "1.0",
+        "version": annotations["version"],
         "challenge": "ego4d_vq2d_challenge",
         "results": {"videos": []},
     }
