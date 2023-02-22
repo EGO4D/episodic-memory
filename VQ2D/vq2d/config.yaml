@@ -49,4 +49,5 @@ tracker:
     debug: False
   kys_tracker:
     debug: False
+    lost_thresh: 0.05
     model_path: "pretrained_models/kys.pth"
