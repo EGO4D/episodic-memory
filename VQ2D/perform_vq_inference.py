@@ -173,6 +173,17 @@ class Task:
             rt_signal = np.zeros((query_frame,))
             rt_signal[pred_rt_start : pred_rt_end + 1] = 1
             plt.plot(rt_signal, color="red", label="Pred response track")
+            # Plot ground-truth response track if available
+            if "response_track" in self.annot:
+                gt_rt_start = min(
+                    [rf["frame_number"] for rf in self.annot["response_track"]]
+                )
+                gt_rt_end = max(
+                    [rf["frame_number"] for rf in self.annot["response_track"]]
+                )
+                rt_signal = np.zeros((query_frame,))
+                rt_signal[gt_rt_start : gt_rt_end + 1] = 1
+                plt.plot(rt_signal, color="green", label="GT response track")
             # Plot peak in signal
             plt.plot(peaks, score_signal_sm[peaks], "rx", label="Peaks")
             save_dir = os.path.join(cfg.logging.save_dir, f"visualizations/{annot_key}")
@@ -308,21 +319,22 @@ def convert_annotations_to_list(annotations):
                 for qid, q in a["query_sets"].items():
                     if not q["is_valid"]:
                         continue
-                    annotations_list.append(
-                        {
-                            "metadata": {
-                                "video_uid": vuid,
-                                "video_start_sec": c["video_start_sec"],
-                                "video_end_sec": c["video_end_sec"],
-                                "clip_fps": c["clip_fps"],
-                                "query_set": qid,
-                                "annotation_uid": aid,
-                            },
-                            "clip_uid": cuid,
-                            "query_frame": q["query_frame"],
-                            "visual_crop": q["visual_crop"],
-                        }
-                    )
+                    curr_q = {
+                        "metadata": {
+                            "video_uid": vuid,
+                            "video_start_sec": c["video_start_sec"],
+                            "video_end_sec": c["video_end_sec"],
+                            "clip_fps": c["clip_fps"],
+                            "query_set": qid,
+                            "annotation_uid": aid,
+                        },
+                        "clip_uid": cuid,
+                        "query_frame": q["query_frame"],
+                        "visual_crop": q["visual_crop"],
+                    }
+                    if "response_track" in q:
+                        curr_q["response_track"] = q["response_track"]
+                    annotations_list.append(curr_q)
     return annotations_list
 
 
