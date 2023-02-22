@@ -2,12 +2,12 @@
 Script to extract clips from a video
 """
 import argparse
-import cv2
 import json
 import multiprocessing as mp
 import os
 import subprocess as sp
 
+import cv2
 import imageio
 import pims
 import tqdm
@@ -84,6 +84,14 @@ def extract_clip(video_path, clip_data, save_root, downscale_height=700):
     vsf = clip_data["video_start_frame"]
     vef = clip_data["video_end_frame"]
     reader = pims.Video(video_path)
+    # Downscale images to save memory
+    frame = reader[0]
+    frame_scale = float(downscale_height) / frame.shape[0]
+    new_H = downscale_height
+    new_W = int(frame.shape[1] * frame_scale)
+    if new_W % 2 == 1:  # ffmpeg requirement
+        new_W += 1
+    # Create video clip
     with get_mp4_writer(clip_save_path, clip_fps) as writer:
         for fno in frames_to_select(vsf, vef, video_fps, clip_fps):
             try:
@@ -94,12 +102,6 @@ def extract_clip(video_path, clip_data, save_root, downscale_height=700):
                     f"===> frame {fno} out of range for video {video_path} (max fno = {max_fno})"
                 )
                 break
-            # Downscale image to save memory
-            frame_scale = float(downscale_height) / frame.shape[0]
-            new_H = downscale_height
-            new_W = int(frame.shape[1] * frame_scale)
-            if new_W % 2 == 1: # ffmpeg requirement
-                new_W += 1
             frame = cv2.resize(frame, (new_W, new_H))
             writer.append_data(frame)
 
@@ -148,7 +150,7 @@ def main(args):
         tqdm.tqdm(
             pool.imap_unordered(video_to_clip_fn, inputs),
             total=len(inputs),
-            desc="Converting videos to clips"
+            desc="Converting videos to clips",
         )
     )
 
