@@ -23,6 +23,7 @@ signals:
   width: 3
   prominence: 0.2
   wlen: 50
+  peak_similarity_thresh: 0.0
 
 logging:
   visualize: False

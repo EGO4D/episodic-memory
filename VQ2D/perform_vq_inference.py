@@ -66,8 +66,6 @@ class Task:
         video_reader = pims.Video(clip_path)
         query_frame = self.annot["query_frame"]
         visual_crop = self.annot["visual_crop"]
-        vcfno = self.annot["visual_crop"]["frame_number"]
-        clip_frames = video_reader[0 : max(query_frame, vcfno) + 1]
         clip_read_time = time.time() - start_time
         start_time = time.time()
         # Retrieve nearest matches and their scores per image
@@ -87,7 +85,7 @@ class Task:
 
         if cache_exists:
             ret_bboxes, ret_scores, ret_imgs, visual_crop_im = perform_cached_retrieval(
-                clip_frames,
+                video_reader,
                 visual_crop,
                 query_frame,
                 predictor,
@@ -99,7 +97,7 @@ class Task:
             )
         else:
             ret_bboxes, ret_scores, ret_imgs, visual_crop_im = perform_retrieval(
-                clip_frames,
+                video_reader,
                 visual_crop,
                 query_frame,
                 predictor,
@@ -131,13 +129,19 @@ class Task:
         )
         peak_signal_time_taken = time.time() - start_time
         start_time = time.time()
+        # Identify most recent peak with sufficient similarity
+        recent_peak = None
+        for peak in peaks[::-1]:
+            if score_signal_sm[peak] >= sig_cfg.peak_similarity_thresh:
+                recent_peak = peak
+                # print(f"====> Signal peak score: {score_signal_sm[peak]}")
+                break
         # Perform tracking to predict response track
-        search_frames = clip_frames[: query_frame - 1]
-        if len(peaks) > 0:
-            init_state = ret_bboxes[peaks[-1]][0]
-            init_frame = clip_frames[init_state.fno]
+        if recent_peak is not None:
+            init_state = ret_bboxes[recent_peak][0]
+            init_frame = video_reader[init_state.fno]
             pred_rt, pred_rt_vis = tracker(
-                init_state, init_frame, search_frames, similarity_net
+                init_state, init_frame, video_reader, query_frame, similarity_net
             )
             pred_rts = [ResponseTrack(pred_rt, score=1.0)]
         else:
@@ -214,8 +218,8 @@ class Task:
             ################## Visualize search window #########################
             save_path = os.path.join(save_dir, f"search_window.mp4")
             writer = imageio.get_writer(save_path)
-            for sf in search_frames:
-                writer.append_data(sf)
+            for sf_ix in range(query_frame):
+                writer.append_data(video_reader[sf_ix])
             writer.close()
 
         return {self.key: pred_rts}

@@ -84,7 +84,7 @@ def metric(x, y, sigma=1):
     mean_squared_error = mean_squared_error.sum(axis=1)
     mean_squared_error = mean_squared_error.sum(axis=1)
     mean_squared_error = mean_squared_error / (h * w * 3)
-    similarity = np.exp(-mean_squared_error / (2 * sigma**2))
+    similarity = np.exp(-mean_squared_error / (2 * sigma ** 2))
     return similarity
 
 
@@ -94,18 +94,21 @@ class PFRunner(object):
         self.device = device
 
     def __call__(
-        self, init_state, init_frame, search_frames, net, *args, **kwargs
+        self, init_state, init_frame, video_reader, end_frame, net, *args, **kwargs
     ):
-        return run_pfilter(init_state, init_frame, search_frames, self.cfg, net, self.device)
+        return run_pfilter(
+            init_state, init_frame, video_reader, end_frame, self.cfg, net, self.device
+        )
 
 
-def run_pfilter(init_state, init_frame, search_frames, cfg, net, device):
+def run_pfilter(init_state, init_frame, video_reader, end_frame, cfg, net, device):
     """
     init_state: initial state of the tracked obj in the frame (gathered from the
                 detection stage)
                 [x,y,sx, sy]
     init_frame: frame corresponding to init_state
-    search_frames: list of input frames to track object over
+    video_reader: reader which yields frames from the video
+    end_frame: last frame in the search window + 1
     """
     pf_cfg = cfg.tracker.pfilter
 
@@ -177,7 +180,7 @@ def run_pfilter(init_state, init_frame, search_frames, cfg, net, device):
 
     start_rt_pred = start_fno
     for i in range(start_fno - 1, -1, -1):
-        image = search_frames[i]  # RGB
+        image = video_reader[i]  # RGB
         pf.update(image)
 
         state = pf.map_state
@@ -225,7 +228,7 @@ def run_pfilter(init_state, init_frame, search_frames, cfg, net, device):
     # Add a few padding frames
     if cfg.logging.visualize:
         for i in range(start_rt_pred - 1, max(start_rt_pred - 10, 1), -1):
-            image = search_frames[i]
+            image = video_reader[i]
             image = cv2.resize(image, None, fx=0.5, fy=0.5)
             backward_track_vis.append(image)
 
@@ -250,8 +253,8 @@ def run_pfilter(init_state, init_frame, search_frames, cfg, net, device):
     forward_track = []
     forward_track_vis = []
 
-    for i in range(start_fno + 1, len(search_frames)):
-        image = search_frames[i]
+    for i in range(start_fno + 1, end_frame):
+        image = video_reader[i]
         pf.update(image)
 
         state = pf.map_state
@@ -298,8 +301,8 @@ def run_pfilter(init_state, init_frame, search_frames, cfg, net, device):
 
     # Add a few padding frames
     if cfg.logging.visualize:
-        for i in range(end_rt_pred + 1, min(end_rt_pred + 10, len(search_frames))):
-            image = search_frames[i]
+        for i in range(end_rt_pred + 1, min(end_rt_pred + 10, end_frame)):
+            image = video_reader[i]
             image = cv2.resize(image, None, fx=0.5, fy=0.5)
             forward_track_vis.append(image)
 

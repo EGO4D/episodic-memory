@@ -11,7 +11,7 @@ from .utils import extract_window_with_context
 
 
 def perform_retrieval(
-    clip_frames: Sequence[np.ndarray],
+    video_reader: Any,
     visual_crop: Dict[str, Any],
     query_frame: int,
     net: DefaultPredictor,
@@ -29,7 +29,7 @@ def perform_retrieval(
     owidth, oheight = visual_crop["original_width"], visual_crop["original_height"]
 
     # Load visual crop frame
-    reference = clip_frames[vc_fno]  # RGB format
+    reference = video_reader[vc_fno]  # RGB format
     ## Resize visual crop if stored aspect ratio was incorrect
     if (reference.shape[0] != oheight) or (reference.shape[1] != owidth):
         reference = cv2.resize(reference, (owidth, oheight))
@@ -74,7 +74,8 @@ def perform_retrieval(
         image_scales = []
         i_end = min(i + batch_size, len(search_window))
         for j in range(i, i_end):
-            image = clip_frames[search_window[j]]  # RGB format
+            orig_image = video_reader[search_window[j]]  # RGB format
+            image = orig_image
             if image.shape[:2] != (oheight, owidth):
                 image = cv2.resize(image, (owidth, oheight))
                 print("Incorrect aspect ratio encountered!")
@@ -84,7 +85,7 @@ def perform_retrieval(
             bimages.append(image)
             breferences.append(reference)
             if visualize:
-                ret_imgs.append(clip_frames[search_window[j]].copy())
+                ret_imgs.append(orig_image)
             image_scales.append(image_scale)
         # Perform inference
         all_outputs = net(bimages, breferences)
@@ -105,7 +106,7 @@ def perform_retrieval(
 
 
 def perform_cached_retrieval(
-    clip_frames: Sequence[np.ndarray],
+    video_reader: Any,
     visual_crop: Dict[str, Any],
     query_frame: int,
     net: DefaultPredictor,
@@ -123,7 +124,7 @@ def perform_cached_retrieval(
     owidth, oheight = visual_crop["original_width"], visual_crop["original_height"]
 
     # Load visual crop frame
-    reference = clip_frames[vc_fno]  # RGB format
+    reference = video_reader[vc_fno]  # RGB format
     ## Resize visual crop if stored aspect ratio was incorrect
     if (reference.shape[0] != oheight) or (reference.shape[1] != owidth):
         reference = cv2.resize(reference, (owidth, oheight))
@@ -160,5 +161,5 @@ def perform_cached_retrieval(
     # Gather predictions
     ret_bboxes = [cached_bboxes[s] for s in search_window]
     ret_scores = [cached_scores[s] for s in search_window]
-    ret_imgs = [clip_frames[s].copy() for s in search_window] if visualize else []
+    ret_imgs = [video_reader[s].copy() for s in search_window] if visualize else []
     return ret_bboxes, ret_scores, ret_imgs, reference

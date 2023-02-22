@@ -10,7 +10,7 @@ from .utils import draw_bbox
 
 
 class KYSTracker(object):
-    def __init__(self, model_path, device):
+    def __init__(self, model_path, device, lost_thresh=0.05):
         name, parameter_name = "kys", "default"
         self.device = device
         torch.cuda.set_device(device)
@@ -21,6 +21,7 @@ class KYSTracker(object):
         params = param_module.parameters()
         params.tracker_name = name
         params.param_name = parameter_name
+        params.target_not_found_threshold_fused = lost_thresh
         params.net = NetWithBackbone(net_path=model_path, use_gpu=params.use_gpu)
 
         # Create tracker
@@ -63,15 +64,20 @@ class KYSTracker(object):
 class KYSRunner(object):
     def __init__(self, cfg, device):
         self.cfg = cfg
-        self.tracker = KYSTracker(cfg.tracker.kys_tracker.model_path, device)
+        kys_cfg = cfg.tracker.kys_tracker
+        self.tracker = KYSTracker(
+            kys_cfg.model_path, device, lost_thresh=kys_cfg.lost_thresh
+        )
 
-    def __call__(self, init_state, init_frame, search_frames, *args, **kwargs):
+    def __call__(
+        self, init_state, init_frame, video_reader, end_frame, *args, **kwargs
+    ):
         return run_kys_tracker(
-            init_state, init_frame, search_frames, self.cfg, self.tracker
+            init_state, init_frame, video_reader, end_frame, self.cfg, self.tracker
         )
 
 
-def run_kys_tracker(init_state, init_frame, search_frames, cfg, kys_tracker):
+def run_kys_tracker(init_state, init_frame, video_reader, end_frame, cfg, kys_tracker):
 
     kys_cfg = cfg.tracker.kys_tracker
 
@@ -94,7 +100,7 @@ def run_kys_tracker(init_state, init_frame, search_frames, cfg, kys_tracker):
 
     start_rt_pred = start_fno
     for i in range(start_fno - 1, -1, -1):
-        image = search_frames[i]  # RGB
+        image = video_reader[i]  # RGB
         kys_tracker.update_state(image)
         if kys_tracker.lost_track:
             break
@@ -117,7 +123,7 @@ def run_kys_tracker(init_state, init_frame, search_frames, cfg, kys_tracker):
     # Add a few padding frames
     if cfg.logging.visualize:
         for i in range(start_rt_pred - 1, max(start_rt_pred - 10, 1), -1):
-            image = search_frames[i]
+            image = video_reader[i]
             image = cv2.resize(image, None, fx=0.5, fy=0.5)
             backward_track_vis.append(image)
 
@@ -128,8 +134,8 @@ def run_kys_tracker(init_state, init_frame, search_frames, cfg, kys_tracker):
     forward_track = []
     forward_track_vis = []
     end_rt_pred = start_fno
-    for i in range(start_fno + 1, len(search_frames), 1):
-        image = search_frames[i]
+    for i in range(start_fno + 1, end_frame, 1):
+        image = video_reader[i]
         kys_tracker.update_state(image)
         if kys_tracker.lost_track:
             break
@@ -151,8 +157,8 @@ def run_kys_tracker(init_state, init_frame, search_frames, cfg, kys_tracker):
 
     # Add a few padding frames
     if cfg.logging.visualize:
-        for i in range(end_rt_pred + 1, min(end_rt_pred + 10, len(search_frames))):
-            image = search_frames[i]
+        for i in range(end_rt_pred + 1, min(end_rt_pred + 10, end_frame)):
+            image = video_reader[i]
             image = cv2.resize(image, None, fx=0.5, fy=0.5)
             forward_track_vis.append(image)
 
