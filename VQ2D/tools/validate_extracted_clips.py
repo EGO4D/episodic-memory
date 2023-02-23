@@ -15,7 +15,6 @@ def approx_equal_durations(dur1, dur2, thresh=1.0):
 
 
 def check_clip(clip_uid, clip_annotations, clip_metadata, args):
-    video_uid = clip_metadata["video_uid"]
     video_start_sec = clip_metadata["video_start_sec"]
     video_end_sec = clip_metadata["video_end_sec"]
     # Check if extracted clip duration matches expected duration
@@ -85,7 +84,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--annot-paths", type=str, required=True, nargs="+")
     parser.add_argument("--clips-root", type=str, required=True)
-    parser.add_argument("--ego4d-videos-root", type=str, required=True)
     args = parser.parse_args()
 
     main(args)
