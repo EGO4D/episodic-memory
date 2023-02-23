@@ -386,6 +386,6 @@ if __name__=='__main__':
                     # save output for metric compute
                     qset['pred_3d_vec_world'] = pred_t.tolist()
 
-print(' valide # queries: ', cpt_valid_queries)
-json.dump(vq3d_queries, open(output_filename, 'w'))
+    print(' valide # queries: ', cpt_valid_queries)
+    json.dump(vq3d_queries, open(output_filename, 'w'))
 

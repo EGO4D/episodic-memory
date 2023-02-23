@@ -35,6 +35,12 @@ def parse_VQ2D_queries(filename: str) -> Dict:
     return output
 
 
+Rz_90 = np.array([[np.cos(-np.pi/2), -np.sin(-np.pi/2), 0, 0],
+                  [np.sin(-np.pi/2),  np.cos(-np.pi/2), 0, 0],
+                  [0, 0, 1, 0],
+                  [0, 0, 0, 1],
+                 ])
+
 
 
 if __name__=='__main__':
@@ -107,6 +113,10 @@ if __name__=='__main__':
                     # -- -- get GT object centroid in world system
                     for w in [1, 2]:
                         vec = helper.load_3d_annotation(qset[f'3d_annotation_{w}'])
+                        
+                        vec = np.append(vec, 1.)
+                        vec = np.matmul(Rz_90, vec)
+                        vec = vec[:3] / vec[3]
 
                         qset[f'gt_3d_vec_world_{w}'] = vec.tolist()
 
