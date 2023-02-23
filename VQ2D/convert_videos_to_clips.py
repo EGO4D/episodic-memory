@@ -52,6 +52,10 @@ def frames_to_select(
         yield i + start_frame
 
 
+def approx_equal_durations(dur1, dur2, thresh=1.0):
+    return abs(dur1 - dur2) < thresh
+
+
 def extract_clip(video_path, clip_data, save_root, downscale_height=700):
     """
     Extracts clips from a video
@@ -71,12 +75,18 @@ def extract_clip(video_path, clip_data, save_root, downscale_height=700):
         # If file exists, try loading video metadata
         try:
             # Metadata read success
-            test_reader = pims.Video(clip_save_path)
-            test_reader.close()
-            return 0, clip_save_path
-        except:
+            with pims.Video(clip_save_path) as test_reader:
+                actual_clip_duration = float(len(test_reader)) / test_reader.frame_rate
+            expected_clip_duration = (
+                clip_data["video_end_sec"] - clip_data["video_start_sec"]
+            )
+            if not approx_equal_durations(actual_clip_duration, expected_clip_duration):
+                print(actual_clip_duration, expected_clip_duration)
+            assert approx_equal_durations(actual_clip_duration, expected_clip_duration)
+            return None
+        except Exception as e:
             # Metadata read failed
-            print(f"Failed to read video metadata for {clip_save_path}. Recreating.")
+            print(f"Clip extraction incomplete for {clip_save_path}. Recreating.")
             sp.call(["rm", clip_save_path])
     # Select frames for clip
     clip_fps = int(clip_data["clip_fps"])
@@ -104,6 +114,7 @@ def extract_clip(video_path, clip_data, save_root, downscale_height=700):
                 break
             frame = cv2.resize(frame, (new_W, new_H))
             writer.append_data(frame)
+    reader.close()
 
 
 def batchify_video_uids(video_uids, batch_size):
@@ -127,6 +138,8 @@ def video_to_clip_fn(inputs):
         return None
 
     for clip_data in video_data["clips"]:
+        if args.clip_uids is not None and clip_data["clip_uid"] not in args.clip_uids:
+            continue
         extract_clip(video_path, clip_data, args.save_root)
 
 
@@ -163,6 +176,7 @@ if __name__ == "__main__":
     parser.add_argument("--ego4d-videos-root", type=str, required=True)
     parser.add_argument("--video-batch-size", type=int, default=10)
     parser.add_argument("--num-workers", type=int, default=20)
+    parser.add_argument("--clip-uids", type=str, nargs="+", default=None)
     args = parser.parse_args()
 
     main(args)
