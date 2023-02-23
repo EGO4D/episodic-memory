@@ -56,7 +56,7 @@
     ```
 2. **[New]** We have released an updated version (v1.0.5) of the VQ2D annotations which includes fixes to a subset of data (check details [here](https://eval.ai/web/challenges/challenge-page/1843/overview)). These primarily affect the train and val splits (and not test split). In local experiments, we find that this leads to improved baseline performance on the val split. To use this updated data:
     ```
-    # Download the data using the Ego4D CLI. 
+    # Download the data using the Ego4D CLI.
     ego4d --output_directory="$VQ2D_ROOT/data" --datasets annotations -y --version v1_0_5
 
     # Move out vq annotations to $VQ2D_ROOT/data
@@ -68,13 +68,19 @@
     python process_vq_dataset.py --annot-root data --save-root data
     ```
 
-4. Extract clips for validation and test data from videos.
+4. Extract clips for val and test data from videos. Validate the clips once they are extracted. If validation fails, please re-run the conversion script and it will correct for errors. You can also optionally add a `--clip-uids <clip-uid-1> <clip-uid-2> ...` argument to specify the clips to regenerate.
     ```
+    # Extract clips
     python convert_videos_to_clips.py \
         --annot-paths data/vq_val.json data/vq_test_unannotated.json \
         --save-root data/clips \
         --ego4d-videos-root $EGO4D_VIDEOS_DIR \
         --num-workers 10 # Increase this for speed
+
+    # Validate the extracted clips
+    python tools/validate_extracted_clips.py \
+        --annot-paths data/vq_val.json data/vq_test_unannotated.json \
+        --clips-root data/clips
     ```
 
 5. Extract images for train and validation data from videos.
