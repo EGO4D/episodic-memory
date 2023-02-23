@@ -93,7 +93,7 @@ def compute_visual_query_metrics(
         metrics = OrderedDict()
         for metric_fn in METRIC_FNS:
             metrics.update(metric_fn(gt_rt, pred_rt))
-        if len(acc_frames) > 0:
+        if accessed_frames_in_clip is not None and len(acc_frames) > 0:
             metrics["Search efficiency (%)"] = (
                 1 - np.array(acc_frames).astype(np.float32) / np.array(tot_frames)
             ).mean() * 100.0
