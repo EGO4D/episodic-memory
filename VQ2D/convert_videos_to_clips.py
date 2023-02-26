@@ -96,11 +96,12 @@ def extract_clip(video_path, clip_data, save_root, downscale_height=700):
     reader = pims.Video(video_path)
     # Downscale images to save memory
     frame = reader[0]
-    frame_scale = float(downscale_height) / frame.shape[0]
-    new_H = downscale_height
-    new_W = int(frame.shape[1] * frame_scale)
-    if new_W % 2 == 1:  # ffmpeg requirement
-        new_W += 1
+    if downscale_height > 0:
+        frame_scale = float(downscale_height) / frame.shape[0]
+        new_H = downscale_height
+        new_W = int(frame.shape[1] * frame_scale)
+        if new_W % 2 == 1:  # ffmpeg requirement
+            new_W += 1
     # Create video clip
     with get_mp4_writer(clip_save_path, clip_fps) as writer:
         for fno in frames_to_select(vsf, vef, video_fps, clip_fps):
@@ -112,7 +113,8 @@ def extract_clip(video_path, clip_data, save_root, downscale_height=700):
                     f"===> frame {fno} out of range for video {video_path} (max fno = {max_fno})"
                 )
                 break
-            frame = cv2.resize(frame, (new_W, new_H))
+            if downscale_height > 0:
+                frame = cv2.resize(frame, (new_W, new_H))
             writer.append_data(frame)
     reader.close()
 
@@ -140,7 +142,12 @@ def video_to_clip_fn(inputs):
     for clip_data in video_data["clips"]:
         if args.clip_uids is not None and clip_data["clip_uid"] not in args.clip_uids:
             continue
-        extract_clip(video_path, clip_data, args.save_root)
+        extract_clip(
+            video_path,
+            clip_data,
+            args.save_root,
+            downscale_height=args.downscale_height,
+        )
 
 
 def main(args):
@@ -177,6 +184,7 @@ if __name__ == "__main__":
     parser.add_argument("--video-batch-size", type=int, default=10)
     parser.add_argument("--num-workers", type=int, default=20)
     parser.add_argument("--clip-uids", type=str, nargs="+", default=None)
+    parser.add_argument("--downscale-height", type=int, default=700)
     args = parser.parse_args()
 
     main(args)
