@@ -20,8 +20,6 @@ from vq2d.baselines import (
     create_similarity_network,
     get_clip_name_from_clip_uid,
     perform_retrieval,
-    perform_cached_retrieval,
-    SiamPredictor,
 )
 from vq2d.structures import ResponseTrack
 from vq2d.tracking import Tracker
@@ -56,7 +54,7 @@ class Task:
             for annot in self.annots
         ]
 
-    def run(self, predictor, similarity_net, tracker, cfg, device):
+    def run(self, similarity_net, tracker, cfg, device):
 
         data_cfg = cfg.data
         sig_cfg = cfg.signals
@@ -88,18 +86,15 @@ class Task:
             start_time = time.time()
             # Retrieve nearest matches and their scores per image
             cached_bboxes, cached_scores, cache_exists = None, None, False
-            if cfg.model.enable_cache:
-                assert cfg.model.cache_root != ""
-                cache_path = os.path.join(cfg.model.cache_root, f"{annot_key}.pt")
-                if os.path.isfile(cache_path):
-                    cache = torch.load(cache_path)
-                    cached_bboxes = cache["ret_bboxes"]
-                    cached_scores = cache["ret_scores"]
-                    cache_exists = True
-                    assert len(cached_bboxes) == query_frame
-                    assert len(cached_scores) == query_frame
-                else:
-                    print(f"Could not find cached detections: {cache_path}")
+            assert cfg.model.cache_root != ""
+            cache_path = os.path.join(cfg.model.cache_root, f"{annot_key}.pt")
+            assert os.path.isfile(cache_path)
+            cache = torch.load(cache_path)
+            cached_bboxes = cache["ret_bboxes"]
+            cached_scores = cache["ret_scores"]
+            cache_exists = True
+            assert len(cached_bboxes) == query_frame
+            assert len(cached_scores) == query_frame
 
             if visual_crop["frame_number"] >= len(video_reader):
                 print(
@@ -109,34 +104,19 @@ class Task:
                 )
                 return {}
 
-            if cache_exists:
-                (
-                    ret_bboxes,
-                    ret_scores,
-                    ret_imgs,
-                    visual_crop_im,
-                ) = perform_cached_retrieval(
-                    video_reader,
-                    visual_crop,
-                    query_frame,
-                    predictor,
-                    cached_bboxes,
-                    cached_scores,
-                    recency_factor=cfg.model.recency_factor,
-                    subsampling_factor=cfg.model.subsampling_factor,
-                    visualize=cfg.logging.visualize,
-                )
-            else:
-                ret_bboxes, ret_scores, ret_imgs, visual_crop_im = perform_retrieval(
-                    video_reader,
-                    visual_crop,
-                    query_frame,
-                    predictor,
-                    batch_size=data_cfg.rcnn_batch_size,
-                    recency_factor=cfg.model.recency_factor,
-                    subsampling_factor=cfg.model.subsampling_factor,
-                    visualize=cfg.logging.visualize,
-                )
+            (ret_bboxes, ret_scores, ret_imgs, visual_crop_im,) = perform_retrieval(
+                video_reader,
+                visual_crop,
+                query_frame,
+                cached_bboxes,
+                cached_scores,
+                recency_factor=cfg.model.recency_factor,
+                subsampling_factor=cfg.model.subsampling_factor,
+                visualize=cfg.logging.visualize,
+                reference_pad=cfg.model.reference_pad,
+                reference_size=cfg.model.reference_size,
+            )
+
             detection_time_taken = time.time() - start_time
             start_time = time.time()
             # Generate a time signal of scores
@@ -279,15 +259,6 @@ class WorkerWithDevice(mp.Process):
 
         device = torch.device(f"cuda:{self.device_id}")
 
-        # Create detector
-        detectron_cfg = get_detectron_cfg()
-        detectron_cfg.merge_from_file(self.cfg.model.config_path)
-        detectron_cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = self.cfg.model.score_thresh
-        detectron_cfg.MODEL.WEIGHTS = self.cfg.model.checkpoint_path
-        detectron_cfg.MODEL.DEVICE = f"cuda:{self.device_id}"
-        detectron_cfg.INPUT.FORMAT = "RGB"
-        predictor = SiamPredictor(detectron_cfg)
-
         # Create tracker
         similarity_net = create_similarity_network()
         similarity_net.eval()
@@ -306,7 +277,7 @@ class WorkerWithDevice(mp.Process):
                 task = task_queue.get(timeout=1.0)
             except QueueEmpty:
                 break
-            pred_rts = task.run(predictor, similarity_net, tracker, self.cfg, device)
+            pred_rts = task.run(similarity_net, tracker, self.cfg, device)
             results_queue.put(pred_rts)
 
 

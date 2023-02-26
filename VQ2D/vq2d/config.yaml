@@ -37,7 +37,8 @@ model:
   subsampling_factor: 1.0
   recency_factor: 1.0
   cache_root: ""
-  enable_cache: False
+  reference_pad: 16
+  reference_size: 256
 
 tracker:
   type: "kys" # Options: [ kys | pfilter ]
