@@ -100,6 +100,7 @@ cd camera_pose_estimation/
         --output_filename data/v1/scan_to_intrinsics.json
     ```
 
+* Note: To help reproducibility camera intrinsics have been added here: `data/scan_to_intrinsics.json`
 
 2. Compute the camera poses
 
@@ -123,7 +124,8 @@ cd camera_pose_estimation/
         --output_dir data/v1/clips_camera_poses/ \
     ```
 
-* Note: Camera pose estimation results on the val set have been included for reference here: `data/all_clips_camera_poses_val.json`
+* Note-1: Camera pose estimation results on the val set have been included for reference here: `data/all_clips_camera_poses_val.json`
+* Note-2: To help reproducibility we are also providing the data for all the intermediate steps to compute the poses for one clip in the val set. You can download that information [here](https://drive.google.com/file/d/1n3dRCrpO0DACfTKwbv3A0YlhFdl6HJm-/view?usp=sharing)
 
 ### Depth estimation
 ```
@@ -178,6 +180,19 @@ cd VQ3D/
 
     ```
 
+* Note: To help reproducibility we provide the results for the val set here: `data/vq3d_results/siam_rcnn_residual_kys_val.json`
+
+
+## [UPDATES] Notes about the Challenge
+
+1. Please use the `vq3d_test_unannotated_template.json` file (under **data/**) for the challenge.
+   These queries are the same as the ones downloaded using the ego4d-client, we have added the 'annotation_uid' entry to help match VQ3D and VQ2D queries.
+
+2. To find the corresponding VQ2D queries you should use the 'annotation_uid' entry found in each VQ3D query.
+   We have also added a `mapping_vq2d_to_vq3d_queries_annotations_test.json` to help find the corresponding queries.
+   Please refer to [these lines](https://github.com/EGO4D/episodic-memory/blob/2118006b2c7a182ff93416cc876bc4623192a4c9/VQ3D/VQ3D/scripts/run.py#L171) to understand how to use it.
+
+3. To create a submission for the challenge you should use the `vq3d_test_unannotated_template.json` file and add the required information directly in it.
 
 
 [1]: https://arxiv.org/abs/2110.07058
