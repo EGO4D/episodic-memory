@@ -121,38 +121,46 @@ def extract_clip_bboxes_and_scores(
 
 
 class Task:
-    def __init__(self, annot):
+    def __init__(self, annots):
         super().__init__()
-        self.annot = annot
+        self.annots = annots
+        # Ensure that all annotations belong to the same clip
+        clip_uid = annots[0]["clip_uid"]
+        for annot in self.annots:
+            assert annot["clip_uid"] == clip_uid
 
     def run(self, predictor, cfg):
         data_cfg = cfg.data
-        clip_uid = self.annot["clip_uid"]
+        clip_uid = self.annots[0]["clip_uid"]
         if clip_uid is None:
             return None
-        annotation_uid = self.annot["metadata"]["annotation_uid"]
-        query_set_id = self.annot["metadata"]["query_set"]
-        key_name = f"{annotation_uid}_{query_set_id}"
-        save_path = os.path.join(cfg.model.cache_root, f"{key_name}.pt")
-        if not os.path.isfile(save_path):
-            # Load clip from file
-            clip_path = os.path.join(
-                data_cfg.data_root, get_clip_name_from_clip_uid(clip_uid)
-            )
-            video_reader = pims.Video(clip_path)
-            query_frame = self.annot["query_frame"]
-            visual_crop = self.annot["visual_crop"]
-            # Retrieve nearest matches and their scores per image
-            ret_bboxes, ret_scores = extract_clip_bboxes_and_scores(
-                video_reader,
-                clip_path,
-                visual_crop,
-                query_frame,
-                predictor,
-                batch_size=data_cfg.rcnn_batch_size,
-                key_name=key_name,
-            )
-            torch.save({"ret_bboxes": ret_bboxes, "ret_scores": ret_scores}, save_path)
+        # Load clip from file
+        clip_path = os.path.join(
+            data_cfg.data_root, get_clip_name_from_clip_uid(clip_uid)
+        )
+        video_reader = pims.Video(clip_path)
+        for annot in self.annots:
+            annotation_uid = annot["metadata"]["annotation_uid"]
+            query_set_id = annot["metadata"]["query_set"]
+            key_name = f"{annotation_uid}_{query_set_id}"
+            save_path = os.path.join(cfg.model.cache_root, f"{key_name}.pt")
+            if not os.path.isfile(save_path):
+                query_frame = annot["query_frame"]
+                visual_crop = annot["visual_crop"]
+                # Retrieve nearest matches and their scores per image
+                ret_bboxes, ret_scores = extract_clip_bboxes_and_scores(
+                    video_reader,
+                    clip_path,
+                    visual_crop,
+                    query_frame,
+                    predictor,
+                    batch_size=data_cfg.rcnn_batch_size,
+                    key_name=key_name,
+                )
+                torch.save(
+                    {"ret_bboxes": ret_bboxes, "ret_scores": ret_scores}, save_path
+                )
+        video_reader.close()
 
         return key_name
 
@@ -197,8 +205,8 @@ def extract_detection_scores(annotations, cfg):
     mp.set_start_method("forkserver")
 
     task_queue = mp.Queue()
-    for annot in annotations:
-        task = Task(annot)
+    for _, annots in annotations.items():
+        task = Task(annots)
         task_queue.put(task)
     # Results will be stored in this queue
     results_queue = mp.Queue()
@@ -229,8 +237,8 @@ def extract_detection_scores(annotations, cfg):
     pbar.close()
 
 
-def convert_annotations_to_list(annotations):
-    annotations_list = []
+def convert_annotations_to_clipwise_list(annotations):
+    clipwise_annotations_list = {}
     for v in annotations["videos"]:
         vuid = v["video_uid"]
         for c in v["clips"]:
@@ -240,22 +248,25 @@ def convert_annotations_to_list(annotations):
                 for qid, q in a["query_sets"].items():
                     if not q["is_valid"]:
                         continue
-                    annotations_list.append(
-                        {
-                            "metadata": {
-                                "video_uid": vuid,
-                                "video_start_sec": c["video_start_sec"],
-                                "video_end_sec": c["video_end_sec"],
-                                "clip_fps": c["clip_fps"],
-                                "query_set": qid,
-                                "annotation_uid": aid,
-                            },
-                            "clip_uid": cuid,
-                            "query_frame": q["query_frame"],
-                            "visual_crop": q["visual_crop"],
-                        }
-                    )
-    return annotations_list
+                    curr_q = {
+                        "metadata": {
+                            "video_uid": vuid,
+                            "video_start_sec": c["video_start_sec"],
+                            "video_end_sec": c["video_end_sec"],
+                            "clip_fps": c["clip_fps"],
+                            "query_set": qid,
+                            "annotation_uid": aid,
+                        },
+                        "clip_uid": cuid,
+                        "query_frame": q["query_frame"],
+                        "visual_crop": q["visual_crop"],
+                    }
+                    if "response_track" in q:
+                        curr_q["response_track"] = q["response_track"]
+                    if cuid not in clipwise_annotations_list:
+                        clipwise_annotations_list[cuid] = []
+                    clipwise_annotations_list[cuid].append(curr_q)
+    return clipwise_annotations_list
 
 
 @hydra.main(config_path="vq2d", config_name="config")
@@ -264,16 +275,24 @@ def main(cfg: DictConfig) -> None:
     annot_path = osp.join(cfg.data.annot_root, f"vq_{cfg.data.split}.json")
     with open(annot_path) as fp:
         annotations = json.load(fp)
-    annotations_list = convert_annotations_to_list(annotations)
+    clipwise_annotations_list = convert_annotations_to_clipwise_list(annotations)
 
     assert cfg.model.cache_root != ""
     os.makedirs(cfg.model.cache_root, exist_ok=True)
 
-    if cfg.data.debug_mode:
-        annotations_list = annotations_list[: cfg.data.debug_count]
-    elif cfg.data.subsample:
-        annotations_list = annotations_list[::3]
-    extract_detection_scores(annotations_list, cfg)
+    if cfg.data.debug_mode or cfg.data.subsample:
+        clips_list = list(clipwise_annotations_list.keys())
+        # Filter None clip
+        clips_list = sorted([c for c in clips_list if c is not None])
+        if cfg.data.debug_mode:
+            clips_list = clips_list[: cfg.data.debug_count]
+        elif cfg.data.subsample:
+            clips_list = clips_list[::3]
+        clipwise_annotations_list = {
+            k: clipwise_annotations_list[k] for k in clips_list
+        }
+
+    extract_detection_scores(clipwise_annotations_list, cfg)
 
 
 if __name__ == "__main__":
