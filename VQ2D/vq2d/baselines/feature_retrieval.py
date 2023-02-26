@@ -78,7 +78,7 @@ def perform_retrieval(
             image = orig_image
             if image.shape[:2] != (oheight, owidth):
                 image = cv2.resize(image, (owidth, oheight))
-                print("Incorrect aspect ratio encountered!")
+                # print("Incorrect aspect ratio encountered!")
             # Scale-down image to reduce memory consumption
             image_scale = float(downscale_height) / image.shape[0]
             image = cv2.resize(image, None, fx=image_scale, fy=image_scale)
@@ -161,5 +161,9 @@ def perform_cached_retrieval(
     # Gather predictions
     ret_bboxes = [cached_bboxes[s] for s in search_window]
     ret_scores = [cached_scores[s] for s in search_window]
-    ret_imgs = [video_reader[s].copy() for s in search_window] if visualize else []
+    ret_imgs = (
+        [cv2.resize(video_reader[s], (owidth, oheight)) for s in search_window]
+        if visualize
+        else []
+    )
     return ret_bboxes, ret_scores, ret_imgs, reference
