@@ -184,7 +184,7 @@ if __name__ == "__main__":
     parser.add_argument("--video-batch-size", type=int, default=10)
     parser.add_argument("--num-workers", type=int, default=20)
     parser.add_argument("--clip-uids", type=str, nargs="+", default=None)
-    parser.add_argument("--downscale-height", type=int, default=700)
+    parser.add_argument("--downscale-height", type=int, default=-1)
     args = parser.parse_args()
 
     main(args)
