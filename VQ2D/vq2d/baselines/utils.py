@@ -1,5 +1,6 @@
-from typing import Any, Dict, List, Sequence, Union
+from typing import Any, Dict, List, Sequence, Tuple, Union
 
+import cv2
 import numpy as np
 import torch
 import torch.nn as nn
@@ -122,3 +123,13 @@ def get_image_id_from_data(data: Dict[str, Any], data_ix: int, rno: int) -> str:
     clip_uid = data["clip_uid"]
     qset = data["query_set"]
     return f"clip-uid_{clip_uid}_idx_{data_ix}_query-set_{qset}_response-idx_{rno}"
+
+
+def resize_if_needed(image: np.uint8, shape: Tuple[int, int]) -> np.ndarray:
+    """
+    shape - (width, height) tuple
+    """
+    width, height = shape
+    if image.shape[0] != height or image.shape[1] != width:
+        image = cv2.resize(image, shape, interpolation=cv2.INTER_LINEAR)
+    return image

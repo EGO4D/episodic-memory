@@ -5,6 +5,7 @@ import numpy as np
 import torch
 from pytracking.features.net_wrappers import NetWithBackbone
 
+from ..baselines.utils import resize_if_needed
 from ..structures import BBox
 from .utils import draw_bbox
 
@@ -104,8 +105,7 @@ def run_kys_tracker(
 
     owidth, oheight = oshape
     oshapeby2 = (owidth // 2, oheight // 2)
-    if init_frame.shape[0] != oheight or init_frame.shape[1] != owidth:
-        init_frame = cv2.resize(init_frame, oshape, interpolation=cv2.INTER_LINEAR)
+    init_frame = resize_if_needed(init_frame, oshape)
 
     start_fno = init_state.fno
 
@@ -115,9 +115,7 @@ def run_kys_tracker(
     if cfg.logging.visualize:
         start_frame_vis = np.copy(init_frame)
         draw_bbox(start_frame_vis, init_state)
-        start_frame_vis = cv2.resize(
-            start_frame_vis, oshapeby2, interpolation=cv2.INTER_LINEAR
-        )
+        start_frame_vis = resize_if_needed(start_frame_vis, oshapeby2)
 
     # -- BACKWARD TRACKING
     # initialize the tracker
@@ -128,9 +126,7 @@ def run_kys_tracker(
 
     start_rt_pred = start_fno
     for i in range(start_fno - 1, -1, -1):
-        image = video_reader[i]  # RGB
-        if image.shape[0] != oheight or image.shape[1] != owidth:
-            image = cv2.resize(image, oshape, interpolation=cv2.INTER_LINEAR)
+        image = resize_if_needed(video_reader[i], oshape)  # RGB
         kys_tracker.update_state(image)
         if kys_tracker.lost_track:
             break
@@ -142,7 +138,7 @@ def run_kys_tracker(
 
         if kys_cfg.debug or cfg.logging.visualize:
             draw_bbox(image, bbox)
-            image = cv2.resize(image, oshapeby2, interpolation=cv2.INTER_LINEAR)
+            image = resize_if_needed(image, oshapeby2)
             backward_track_vis.append(image)
 
         if kys_cfg.debug:
@@ -152,8 +148,7 @@ def run_kys_tracker(
     # Add a few padding frames
     if cfg.logging.visualize:
         for i in range(start_rt_pred - 1, max(start_rt_pred - 10, 1), -1):
-            image = video_reader[i]
-            image = cv2.resize(image, oshapeby2, interpolation=cv2.INTER_LINEAR)
+            image = resize_if_needed(video_reader[i], oshapeby2)
             backward_track_vis.append(image)
 
     # -- FORWARD TRACKING
@@ -164,9 +159,7 @@ def run_kys_tracker(
     forward_track_vis = []
     end_rt_pred = start_fno
     for i in range(start_fno + 1, end_frame, 1):
-        image = video_reader[i]
-        if image.shape[0] != oheight or image.shape[1] != owidth:
-            image = cv2.resize(image, oshape, interpolation=cv2.INTER_LINEAR)
+        image = resize_if_needed(video_reader[i], oshape)
         kys_tracker.update_state(image)
         if kys_tracker.lost_track:
             break
@@ -178,7 +171,7 @@ def run_kys_tracker(
 
         if kys_cfg.debug or cfg.logging.visualize:
             draw_bbox(image, bbox)
-            image = cv2.resize(image, oshapeby2, interpolation=cv2.INTER_LINEAR)
+            image = resize_if_needed(image, oshapeby2)
             forward_track_vis.append(image)
 
         if kys_cfg.debug:
@@ -189,7 +182,7 @@ def run_kys_tracker(
     if cfg.logging.visualize:
         for i in range(end_rt_pred + 1, min(end_rt_pred + 10, end_frame)):
             image = video_reader[i]
-            image = cv2.resize(image, oshapeby2, interpolation=cv2.INTER_LINEAR)
+            image = resize_if_needed(image, oshapeby2)
             forward_track_vis.append(image)
 
     response_track = backward_track[::-1] + [init_state] + forward_track
