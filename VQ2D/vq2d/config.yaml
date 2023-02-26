@@ -1,9 +1,9 @@
 # Hyperparameter sweep with nevergrad
 
 data:
-  data_root: /checkpoint/sramakri/datasets/Ego4D/MiniSets-1-to-6/clips
-  annot_root: /checkpoint/sramakri/datasets/Ego4D/MiniSets-1-to-6/vq_splits
-  video_bbox_root: /checkpoint/sramakri/datasets/Ego4D/MiniSets-1-to-6/bboxes
+  data_root: dataset/clips
+  annot_root: dataset/vq_splits
+  video_bbox_root: dataset/bboxes
   split: val
   fps: 5.0
   subsample: False
