@@ -39,7 +39,10 @@ def get_images_at_peak(all_bboxes, all_scores, all_imgs, peak_idx, topk=5):
     # Visualize the top K retrievals from peak image
     bbox_images = []
     for bbox in bboxes[:topk]:
-        bbox_images.append(image[bbox.y1 : bbox.y2 + 1, bbox.x1 : bbox.x2 + 1])
+        bbox_image = image[bbox.y1 : bbox.y2 + 1, bbox.x1 : bbox.x2 + 1]
+        if bbox_image.shape[0] == 0 or bbox_image.shape[1] == 0:
+            continue
+        bbox_images.append(bbox_image)
     return bbox_images
 
 
@@ -63,6 +66,9 @@ class Task:
         clip_path = os.path.join(
             data_cfg.data_root, get_clip_name_from_clip_uid(clip_uid)
         )
+        if not os.path.exists(clip_path):
+            print(f"Clip {clip_uid} does not exist")
+            return None
         video_reader = pims.Video(clip_path)
         query_frame = self.annot["query_frame"]
         visual_crop = self.annot["visual_crop"]
@@ -82,6 +88,14 @@ class Task:
                 assert len(cached_scores) == query_frame
             else:
                 print(f"Could not find cached detections: {cache_path}")
+
+        if visual_crop["frame_number"] >= len(video_reader):
+            print(
+                "=====> VC {} is out of range in video {} with size {}".format(
+                    visual_crop["frame_number"], clip_uid, len(video_reader)
+                )
+            )
+            return None
 
         if cache_exists:
             ret_bboxes, ret_scores, ret_imgs, visual_crop_im = perform_cached_retrieval(
@@ -167,6 +181,7 @@ class Task:
 
         # Note: This visualization does not work for subsampled evaluation.
         if cfg.logging.visualize:
+            print("Visualizing results...")
             ####################### Visualize the peaks ########################
             plt.figure(figsize=(6, 6))
             # Plot raw signals
@@ -221,6 +236,8 @@ class Task:
             for sf_ix in range(query_frame):
                 writer.append_data(video_reader[sf_ix])
             writer.close()
+        # Close video reader
+        video_reader.close()
 
         return {self.key: pred_rts}
 
@@ -264,7 +281,8 @@ class WorkerWithDevice(mp.Process):
             except QueueEmpty:
                 break
             pred_rts = task.run(predictor, similarity_net, tracker, self.cfg, device)
-            results_queue.put(pred_rts)
+            if pred_rts is not None:
+                results_queue.put(pred_rts)
 
 
 def perform_vq2d_inference(annotations, cfg):
