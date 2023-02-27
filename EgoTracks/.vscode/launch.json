@@ -1,0 +1,32 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python: train_net.py",
+            "type": "python",
+            "request": "launch",
+            "program": "tools/train_net.py",
+            "args" : ["--eval-only", "MODEL.WEIGHTS", "/checkpoint/haotang/experiments/EgoTracks/STARKST_ep0001.pth.tar", "OUTPUT_DIR", "/checkpoint/haotang/experiments/EgoTracks/res/test_challenge_set_small_v1_5FPS_multi_gpu"],
+            "justMyCode": false,
+        },
+        {
+            "name": "Python: egotracks_eval.py",
+            "type": "python",
+            "request": "launch",
+            "program": "tools/egotracks_eval.py",
+            "args" : ["/checkpoint/haotang/experiments/EgoTracks/res/test_challenge_set_small_v1_5FPS_multi_gpu/eval/EGO4DLTTracking/forward_backward_from_vcrop/STARK/submission.json", "--annotation_path", "/checkpoint/haotang/data/EgoTracks/annotations/challenge_test_v1.json"],
+            "justMyCode": false,
+        },
+        {
+            "name": "Python: Current File",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        }
+    ]
+}
