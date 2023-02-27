@@ -144,10 +144,9 @@ def visualize_annotation(clip_path, rt_save_path, crop_save_path, qset):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--ego4d-videos-root", type=str, required=True)
     parser.add_argument("--annot-path", type=str, required=True)
     parser.add_argument("--clips-root", type=str, required=True)
-    parser.add_argument("--vis-save-root", type=str, default="./visualization")
+    parser.add_argument("--vis-save-root", type=str, default="./videos")
 
     args = parser.parse_args()
 

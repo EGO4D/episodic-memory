@@ -5,7 +5,9 @@ import argparse
 import json
 import multiprocessing as mp
 import os
+import subprocess as sp
 
+import cv2
 import imageio
 import pims
 import tqdm
@@ -50,7 +52,11 @@ def frames_to_select(
         yield i + start_frame
 
 
-def extract_clip(video_path, clip_data, save_root):
+def approx_equal_durations(dur1, dur2, thresh=1.0):
+    return abs(dur1 - dur2) < thresh
+
+
+def extract_clip(video_path, clip_data, save_root, downscale_height=700):
     """
     Extracts clips from a video
     Save path format: {save_root}/{clip_uid}.mp4
@@ -60,27 +66,57 @@ def extract_clip(video_path, clip_data, save_root):
         clip_data - a clip annotation from the VQ task export
         save_root - path to save extracted images
     """
-    video_md = read_video_md(video_path)
     clip_uid = clip_data["clip_uid"]
-    clip_save_path = os.path.join(save_root, get_clip_name_from_clip_uid(clip_uid))
-    if os.path.isfile(clip_save_path):
+    if clip_uid is None:
         return None
+    clip_save_path = os.path.join(save_root, get_clip_name_from_clip_uid(clip_uid))
+    video_md = read_video_md(video_path)
+    if os.path.isfile(clip_save_path):
+        # If file exists, try loading video metadata
+        try:
+            # Metadata read success
+            with pims.Video(clip_save_path) as test_reader:
+                actual_clip_duration = float(len(test_reader)) / test_reader.frame_rate
+            expected_clip_duration = (
+                clip_data["video_end_sec"] - clip_data["video_start_sec"]
+            )
+            if not approx_equal_durations(actual_clip_duration, expected_clip_duration):
+                print(actual_clip_duration, expected_clip_duration)
+            assert approx_equal_durations(actual_clip_duration, expected_clip_duration)
+            return None
+        except Exception as e:
+            # Metadata read failed
+            print(f"Clip extraction incomplete for {clip_save_path}. Recreating.")
+            sp.call(["rm", clip_save_path])
     # Select frames for clip
     clip_fps = int(clip_data["clip_fps"])
     video_fps = int(video_md["fps"])
     vsf = clip_data["video_start_frame"]
     vef = clip_data["video_end_frame"]
     reader = pims.Video(video_path)
+    # Downscale images to save memory
+    frame = reader[0]
+    if downscale_height > 0:
+        frame_scale = float(downscale_height) / frame.shape[0]
+        new_H = downscale_height
+        new_W = int(frame.shape[1] * frame_scale)
+        if new_W % 2 == 1:  # ffmpeg requirement
+            new_W += 1
+    # Create video clip
     with get_mp4_writer(clip_save_path, clip_fps) as writer:
         for fno in frames_to_select(vsf, vef, video_fps, clip_fps):
             try:
-                writer.append_data(reader[fno])
+                frame = reader[fno]
             except:
                 max_fno = int(video_md["fps"] * video_md["duration"])
                 print(
                     f"===> frame {fno} out of range for video {video_path} (max fno = {max_fno})"
                 )
                 break
+            if downscale_height > 0:
+                frame = cv2.resize(frame, (new_W, new_H))
+            writer.append_data(frame)
+    reader.close()
 
 
 def batchify_video_uids(video_uids, batch_size):
@@ -104,7 +140,14 @@ def video_to_clip_fn(inputs):
         return None
 
     for clip_data in video_data["clips"]:
-        extract_clip(video_path, clip_data, args.save_root)
+        if args.clip_uids is not None and clip_data["clip_uid"] not in args.clip_uids:
+            continue
+        extract_clip(
+            video_path,
+            clip_data,
+            args.save_root,
+            downscale_height=args.downscale_height,
+        )
 
 
 def main(args):
@@ -127,6 +170,7 @@ def main(args):
         tqdm.tqdm(
             pool.imap_unordered(video_to_clip_fn, inputs),
             total=len(inputs),
+            desc="Converting videos to clips",
         )
     )
 
@@ -139,6 +183,8 @@ if __name__ == "__main__":
     parser.add_argument("--ego4d-videos-root", type=str, required=True)
     parser.add_argument("--video-batch-size", type=int, default=10)
     parser.add_argument("--num-workers", type=int, default=20)
+    parser.add_argument("--clip-uids", type=str, nargs="+", default=None)
+    parser.add_argument("--downscale-height", type=int, default=-1)
     args = parser.parse_args()
 
     main(args)

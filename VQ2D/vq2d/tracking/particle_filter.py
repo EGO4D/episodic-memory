@@ -7,6 +7,7 @@ import torch
 from einops import asnumpy
 from scipy.stats import norm
 
+from ..baselines.utils import resize_if_needed
 from ..structures import BBox
 from .pfilter import (
     ParticleFilter,
@@ -84,29 +85,59 @@ def metric(x, y, sigma=1):
     mean_squared_error = mean_squared_error.sum(axis=1)
     mean_squared_error = mean_squared_error.sum(axis=1)
     mean_squared_error = mean_squared_error / (h * w * 3)
-    similarity = np.exp(-mean_squared_error / (2 * sigma**2))
+    similarity = np.exp(-mean_squared_error / (2 * sigma ** 2))
     return similarity
 
 
 class PFRunner(object):
-    def __init__(self, cfg):
+    def __init__(self, cfg, device):
         self.cfg = cfg
+        self.device = device
 
     def __call__(
-        self, init_state, init_frame, search_frames, net, device, *args, **kwargs
+        self,
+        init_state,
+        init_frame,
+        video_reader,
+        oshape,
+        end_frame,
+        net,
+        *args,
+        **kwargs
     ):
-        return run_pfilter(init_state, init_frame, search_frames, self.cfg, net, device)
+        return run_pfilter(
+            init_state,
+            init_frame,
+            video_reader,
+            oshape,
+            end_frame,
+            self.cfg,
+            net,
+            self.device,
+        )
 
 
-def run_pfilter(init_state, init_frame, search_frames, cfg, net, device):
+def run_pfilter(
+    init_state, init_frame, video_reader, oshape, end_frame, cfg, net, device
+):
     """
     init_state: initial state of the tracked obj in the frame (gathered from the
                 detection stage)
-                [x,y,sx, sy]
-    init_frame: frame corresponding to init_state
-    search_frames: list of input frames to track object over
+                [x,y,sx, sy] (relative to oshape images)
+    init_frame: frame corresponding to init_state (may be smaller than oshape)
+    video_reader: reader which yields frames from the video
+    oshape: (original width, original height) of Ego4D dataset frames
+    end_frame: last frame in the search window + 1
+
+    **Important note:**
+        The frames from video_reader may be smaller than oshape.  These are
+        upsampled to oshape, and final predictions are relative to oshape.
     """
     pf_cfg = cfg.tracker.pfilter
+
+    owidth, oheight = oshape
+    oshapeby2 = (owidth // 2, oheight // 2)
+    init_frame = resize_if_needed(init_frame, oshape)
 
     global img_height, img_width
     img_height, img_width = init_frame.shape[:2]
@@ -149,7 +180,7 @@ def run_pfilter(init_state, init_frame, search_frames, cfg, net, device):
     if cfg.logging.visualize:
         start_frame_vis = np.copy(init_frame)
         draw_bbox(start_frame_vis, init_state)
-        start_frame_vis = cv2.resize(start_frame_vis, None, fx=0.5, fy=0.5)
+        start_frame_vis = resize_if_needed(start_frame_vis, oshapeby2)
 
     # -- BACKWARD TRACKING
     # create the filter
@@ -176,7 +207,7 @@ def run_pfilter(init_state, init_frame, search_frames, cfg, net, device):
 
     start_rt_pred = start_fno
     for i in range(start_fno - 1, -1, -1):
-        image = search_frames[i]  # RGB
+        image = resize_if_needed(video_reader[i], oshape)  # RGB
         pf.update(image)
 
         state = pf.map_state
@@ -210,7 +241,7 @@ def run_pfilter(init_state, init_frame, search_frames, cfg, net, device):
                 line_type=cv2.LINE_AA,
             )
             # pf.viz_particles(image)
-            image = cv2.resize(image, None, fx=0.5, fy=0.5)
+            image = resize_if_needed(image, oshapeby2)
             backward_track_vis.append(image)
 
         if pf_cfg.debug:
@@ -224,8 +255,7 @@ def run_pfilter(init_state, init_frame, search_frames, cfg, net, device):
     # Add a few padding frames
     if cfg.logging.visualize:
         for i in range(start_rt_pred - 1, max(start_rt_pred - 10, 1), -1):
-            image = search_frames[i]
-            image = cv2.resize(image, None, fx=0.5, fy=0.5)
+            image = resize_if_needed(video_reader[i], oshapeby2)
             backward_track_vis.append(image)
 
     # -- FORWARD TRACKING
@@ -249,8 +279,8 @@ def run_pfilter(init_state, init_frame, search_frames, cfg, net, device):
     forward_track = []
     forward_track_vis = []
 
-    for i in range(start_fno + 1, len(search_frames)):
-        image = search_frames[i]
+    for i in range(start_fno + 1, end_frame):
+        image = resize_if_needed(video_reader[i], oshape)
         pf.update(image)
 
         state = pf.map_state
@@ -284,7 +314,7 @@ def run_pfilter(init_state, init_frame, search_frames, cfg, net, device):
                 line_type=cv2.LINE_AA,
             )
             # pf.viz_particles(image)
-            image = cv2.resize(image, None, fx=0.5, fy=0.5)
+            image = resize_if_needed(image, oshapeby2)
             forward_track_vis.append(image)
 
         if pf_cfg.debug:
@@ -297,9 +327,8 @@ def run_pfilter(init_state, init_frame, search_frames, cfg, net, device):
 
     # Add a few padding frames
     if cfg.logging.visualize:
-        for i in range(end_rt_pred + 1, min(end_rt_pred + 10, len(search_frames))):
-            image = search_frames[i]
-            image = cv2.resize(image, None, fx=0.5, fy=0.5)
+        for i in range(end_rt_pred + 1, min(end_rt_pred + 10, end_frame)):
+            image = resize_if_needed(video_reader[i], oshapeby2)
             forward_track_vis.append(image)
 
     response_track = backward_track[::-1] + [init_state] + forward_track

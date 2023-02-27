@@ -22,12 +22,12 @@ def compute_visual_query_metrics(
     predicted_response_track: List[List[ResponseTrack]],
     ground_truth_response_track: List[ResponseTrack],
     visual_crop_boxes: List[BBox],
-    accessed_frames_in_clip: List[int],
-    total_frames_in_clip: List[int],
+    accessed_frames_in_clip: List[int] = None,
+    total_frames_in_clip: List[int] = None,
     area_ranges: Dict[str, List[int]] = {
-        "all": [0**2, 1e5**2],
-        "medium": [32**2, 96**2],
-        "large": [96**2, 1e5**2],
+        "all": [0 ** 2, 1e5 ** 2],
+        "medium": [32 ** 2, 96 ** 2],
+        "large": [96 ** 2, 1e5 ** 2],
     },
     vc_rt_pairings: Dict[str, Tuple[str, str]] = {
         "all": ("all", "all"),
@@ -83,20 +83,20 @@ def compute_visual_query_metrics(
         # Calculate metrics
         pred_rt = [predicted_response_track[i] for i, cond in enumerate(mask) if cond]
         gt_rt = [ground_truth_response_track[i] for i, cond in enumerate(mask) if cond]
-        acc_frames = [accessed_frames_in_clip[i] for i, cond in enumerate(mask) if cond]
-        tot_frames = [total_frames_in_clip[i] for i, cond in enumerate(mask) if cond]
+        if accessed_frames_in_clip is not None:
+            acc_frames = [
+                accessed_frames_in_clip[i] for i, cond in enumerate(mask) if cond
+            ]
+            tot_frames = [
+                total_frames_in_clip[i] for i, cond in enumerate(mask) if cond
+            ]
         metrics = OrderedDict()
         for metric_fn in METRIC_FNS:
             metrics.update(metric_fn(gt_rt, pred_rt))
-        if len(acc_frames) > 0:
+        if accessed_frames_in_clip is not None and len(acc_frames) > 0:
             metrics["Search efficiency (%)"] = (
                 1 - np.array(acc_frames).astype(np.float32) / np.array(tot_frames)
             ).mean() * 100.0
         pair_metrics[pair_name] = metrics
 
-    final_metrics = OrderedDict()
-    for k in pair_metrics[list(pair_metrics.keys())[0]]:
-        for pair_name, metrics in pair_metrics.items():
-            final_metrics[f"{k:50s} | {pair_name:<10s}"] = metrics[k]
-
-    return final_metrics
+    return pair_metrics

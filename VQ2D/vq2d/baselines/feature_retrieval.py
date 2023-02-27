@@ -1,4 +1,4 @@
-from typing import Any, Dict, Sequence
+from typing import Any, Dict, Sequence, List
 
 import cv2
 import numpy as np
@@ -11,14 +11,16 @@ from .utils import extract_window_with_context
 
 
 def perform_retrieval(
-    clip_frames: Sequence[np.ndarray],
+    video_reader: Any,
     visual_crop: Dict[str, Any],
     query_frame: int,
-    net: DefaultPredictor,
-    batch_size: int = 8,
-    downscale_height: int = 700,
+    cached_bboxes: List[BBox],
+    cached_scores: List[float],
     recency_factor: float = 1.0,  # Search only within the most recent frames.
-    subsampling_factor: float = 1.0,  # Search only withiin a subsampled set of frames.
+    subsampling_factor: float = 1.0,  # Search only within a subsampled set of frames.
+    visualize: bool = False,
+    reference_pad: int = 16,
+    reference_size: int = 256,
 ):
     """
     Given a visual crop and frames from a clip, retrieve the bounding box proposal
@@ -28,7 +30,7 @@ def perform_retrieval(
     owidth, oheight = visual_crop["original_width"], visual_crop["original_height"]
 
     # Load visual crop frame
-    reference = clip_frames[vc_fno]  # RGB format
+    reference = video_reader[vc_fno]  # RGB format
     ## Resize visual crop if stored aspect ratio was incorrect
     if (reference.shape[0] != oheight) or (reference.shape[1] != owidth):
         reference = cv2.resize(reference, (owidth, oheight))
@@ -43,8 +45,8 @@ def perform_retrieval(
     reference = extract_window_with_context(
         reference,
         ref_bbox,
-        net.cfg.INPUT.REFERENCE_CONTEXT_PAD,
-        size=net.cfg.INPUT.REFERENCE_SIZE,
+        reference_pad,
+        size=reference_size,
         pad_value=125,
     )
     reference = rearrange(asnumpy(reference.byte()), "() c h w -> h w c")
@@ -62,41 +64,12 @@ def perform_retrieval(
     if len(idxs_to_sample) > 0:
         search_window = [search_window[i] for i in idxs_to_sample]
 
-    # Load reference frames and perform detection
-    ret_bboxes = []
-    ret_scores = []
-    ret_imgs = []
-    # Batch extract predictions
-    for i in range(0, len(search_window), batch_size):
-        bimages = []
-        breferences = []
-        image_scales = []
-        i_end = min(i + batch_size, len(search_window))
-        for j in range(i, i_end):
-            image = clip_frames[search_window[j]]  # RGB format
-            if image.shape[:2] != (oheight, owidth):
-                image = cv2.resize(image, (owidth, oheight))
-                print("Incorrect aspect ratio encountered!")
-            # Scale-down image to reduce memory consumption
-            image_scale = float(downscale_height) / image.shape[0]
-            image = cv2.resize(image, None, fx=image_scale, fy=image_scale)
-            bimages.append(image)
-            breferences.append(reference)
-            ret_imgs.append(clip_frames[search_window[j]].copy())
-            image_scales.append(image_scale)
-        # Perform inference
-        all_outputs = net(bimages, breferences)
-        # Unpack outputs
-        for j in range(i, i_end):
-            instances = all_outputs[j - i]["instances"]
-            image_scale = image_scales[j - i]
-            # Re-scale bboxes
-            ret_bbs = (
-                asnumpy(instances.pred_boxes.tensor / image_scale).astype(int).tolist()
-            )
-            ret_bbs = [BBox(search_window[j], *bbox) for bbox in ret_bbs]
-            ret_scs = asnumpy(instances.scores).tolist()
-            ret_bboxes.append(ret_bbs)
-            ret_scores.append(ret_scs)
-        del all_outputs
+    # Gather predictions
+    ret_bboxes = [cached_bboxes[s] for s in search_window]
+    ret_scores = [cached_scores[s] for s in search_window]
+    ret_imgs = (
+        [cv2.resize(video_reader[s], (owidth, oheight)) for s in search_window]
+        if visualize
+        else []
+    )
     return ret_bboxes, ret_scores, ret_imgs, reference

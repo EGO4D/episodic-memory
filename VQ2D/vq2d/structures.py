@@ -35,9 +35,10 @@ class ResponseTrack:
     def __init__(self, bboxes: List[BBox], score: float = None):
         # A set of bounding boxes with time, and an optional confidence score
         self._bboxes = sorted(bboxes, key=lambda x: x.fno)
-        self._t_start = self._bboxes[0].fno
-        self._t_end = self._bboxes[-1].fno
-        self._length = len(self._bboxes)
+        if self._check_empty(self._bboxes):
+            self._empty_init()
+        else:
+            self._non_empty_init(self._bboxes)
         self._score = score
         self._check_contiguous()
 
@@ -59,6 +60,20 @@ class ResponseTrack:
 
     def has_score(self):
         return self._score is not None
+
+    def _check_empty(self, bboxes):
+        return len(bboxes) == 0
+
+    def _empty_init(self):
+        self._t_start = 0
+        self._t_end = -1
+        self._length = 0
+        print("Encountered empty track")
+
+    def _non_empty_init(self, bboxes):
+        self._t_start = bboxes[0].fno
+        self._t_end = bboxes[-1].fno
+        self._length = len(bboxes)
 
     def _check_contiguous(self):
         if self._length != (self._t_end - self._t_start + 1):
