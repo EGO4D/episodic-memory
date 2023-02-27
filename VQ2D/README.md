@@ -163,11 +163,44 @@ chmod +x ./scripts/extract_vq_detections.sh
 * To participate in the challenge, submit the inference json obtained for the test_unannotated split on evalai.
 
 ## Pre-trained models and detection scores
-For reproducibility and conveneice,  we provide pre-trained models and corresponding detection scores for the [SiamRCNN baseline](https://arxiv.org/pdf/2110.07058.pdf) and [ImprovedBaselines model](https://github.com/facebookresearch/vq2d_cvpr). They can be downloaded using the ego4d CLI as follows:
+For reproducibility and conveneice,  we provide pre-trained models and corresponding detection scores for the [SiamRCNN](https://arxiv.org/pdf/2110.07058.pdf), [ImprovedBaselines](https://arxiv.org/pdf/2208.01949.pdf), and [NegativeFramesMatter](https://arxiv.org/pdf/2211.10528.pdf) models. They can be downloaded using the ego4d CLI as follows:
 
 ```
 python -m ego4d.cli.cli -y --output_directory /path/to/output/ --datasets vq2d_models vq2d_detections
 ```
+Please cite the following papers/reports for the respective models. \
+**SiamRCNN:**
+```
+@inproceedings{grauman2022ego4d,
+title={Ego4d: Around the world in 3,000 hours of egocentric video},
+author={Grauman, Kristen and Westbury, Andrew and Byrne, Eugene and Chavis, Zachary and Furnari, Antonino and Girdhar, Rohit and Hamburger, Jackson and Jiang, Hao and Liu, Miao and Liu, Xingyu and others},
+booktitle={Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition},
+pages={18995--19012},
+year={2022}
+}
+```
+
+**ImprovedBaselines:**
+```
+@article{xu2022negative,
+  title={Negative Frames Matter in Egocentric Visual Query 2D Localization},
+  author={Xu, Mengmeng and Fu, Cheng-Yang and Li, Yanghao and Ghanem, Bernard and Perez-Rua, Juan-Manuel and Xiang, Tao},
+  journal={arXiv preprint arXiv:2208.01949},
+  year={2022}
+}
+```
+
+**NegativeFramesMatter:**
+```
+@article{xu2022where,
+  doi = {10.48550/ARXIV.2211.10528},
+  url = {https://arxiv.org/abs/2211.10528},
+  author = {Xu, Mengmeng and Li, Yanghao and Fu, Cheng-Yang and Ghanem, Bernard and Xiang, Tao and Perez-Rua, Juan-Manuel},
+  title = {Where is my Wallet? Modeling Object Proposal Sets for Egocentric Visual Query Localization},
+  journal={arXiv preprint arXiv:2211.10528},
+  year={2022}
+}
+```
 
 ## Acknowledgements
-This codebase relies on [detectron2](https://github.com/facebookresearch/detectron2), [PyTracking](https://github.com/visionml/pytracking), [pfilter](https://github.com/johnhw/pfilter) and [ActivityNet](https://github.com/activitynet/ActivityNet) repositories.
+This codebase relies on [detectron2](https://github.com/facebookresearch/detectron2), [vq2d_cvpr](https://github.com/facebookresearch/vq2d_cvpr), [PyTracking](https://github.com/visionml/pytracking), [pfilter](https://github.com/johnhw/pfilter) and [ActivityNet](https://github.com/activitynet/ActivityNet) repositories.
