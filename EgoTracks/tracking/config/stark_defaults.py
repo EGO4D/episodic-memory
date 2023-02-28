@@ -79,14 +79,12 @@ cfg.DATA.MEAN = [0.485, 0.456, 0.406]
 cfg.DATA.STD = [0.229, 0.224, 0.225]
 cfg.DATA.MAX_SAMPLE_INTERVAL = [200]
 # We fetch data from different manifold folders
-cfg.DATA.COCO_DATA_DIR = "manifold://fair_vision_data/tree/"
-cfg.DATA.TRACKINGNET_DATA_DIR = "manifold://tracking/tree/data/trackingnet"
-cfg.DATA.CACHED_TRACKINGNET_SEQUENCE_LIST_DIR: str = (
-    "manifold://tracking/tree/data/trackingnet/cache"
-)
-cfg.DATA.LASOT_DATA_DIR: str = "manifold://fai4ar/tree/datasets/LaSOTBenchmark"
-cfg.DATA.GOT10K_DATA_DIR: str = "manifold://tracking/tree/data/got10k"
-cfg.DATA.CACHED_GOT10K_META_INFO_DIR: str = "manifold://tracking/tree/data/got10k/cache"
+cfg.DATA.COCO_DATA_DIR = ""
+cfg.DATA.TRACKINGNET_DATA_DIR = ""
+cfg.DATA.CACHED_TRACKINGNET_SEQUENCE_LIST_DIR: str = ""
+cfg.DATA.LASOT_DATA_DIR: str = ""
+cfg.DATA.GOT10K_DATA_DIR: str = ""
+cfg.DATA.CACHED_GOT10K_META_INFO_DIR: str = ""
 cfg.DATA.EGO4DLTT_ANNOTATION_PATH = (
     "/checkpoint/haotang/data/EgoTracks/annotations/train_v1.json"
 )
@@ -144,21 +142,6 @@ cfg.EVAL.EVAL_DATASETS = ["EGO4DLTTracking"]
 cfg.EVAL.OUTPUT_DIR = None
 cfg.EVAL.NUM_WORKERS = 8
 cfg.EVAL.PRINT_FREQ = 10
-# Ego4D VQ dataset config
-cfg.EVAL.EGO4DVQ = CfgNode()
-cfg.EVAL.EGO4DVQ.ANNOTATION_PATH = (
-    "manifold://tracking/tree/ego4d/v1/annotations/vq_val.json"
-)
-cfg.EVAL.EGO4DVQ.CLIP_DIR = "manifold://tracking/tree/ego4d/clip"
-cfg.EVAL.EGO4DVQ.VIDEO_DIR = (
-    "manifold://tracking/tree/ego4d/intermediate/canonical/v7/full_scale/canonical"
-)
-cfg.EVAL.EGO4DVQ.IS_READ_5FPS_CLIP = True
-cfg.EVAL.EGO4DVQ.IS_SEARCH_LOCAL = True
-cfg.EVAL.EGO4DVQ.TRACK_MODE = "first_bbox"
-cfg.EVAL.EGO4DVQ.VISUALIZE = False
-cfg.EVAL.EGO4DVQ.RETURN_5FPS_FRAMES = False
-
 cfg.EVAL.GOT10K = CfgNode()
 cfg.EVAL.GOT10K.VISUALIZE = False
 

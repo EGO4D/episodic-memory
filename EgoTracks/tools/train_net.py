@@ -201,12 +201,7 @@ def result2submission(args):
     intermediate_dir = os.path.join(result_dir, "intermediate_result")
 
     result = {}
-    # Strange, sometimes certain nodes do not save any result
-    # for shard in range(total_machines):
-    #     path = os.path.join(result_dir, "intermediate_result", f"{shard}.pkl")
-    #     logging.info(path)
-    #     shard_result = pkl.load(pathmgr.open(path, "rb"))
-    #     result.extend(shard_result)
+
     files = pathmgr.ls(intermediate_dir)
     for f in files:
         path = os.path.join(intermediate_dir, f)
@@ -215,7 +210,6 @@ def result2submission(args):
         result.update(shard_result)
 
 
-    # header = ["seq_name", "frame_number", "x", "y", "w", "h", "confidence"]
     submission = defaultdict(dict)
     for k, v in result.items():
         data = []
@@ -224,9 +218,6 @@ def result2submission(args):
         
     with open(os.path.join(result_dir, f"submission.json"), "w") as f:  
         json.dump(submission, f, indent=4)
-    # with open(os.path.join(result_dir, f"submission.json"), "w") as f:   
-    #     write = csv.writer(f)
-    #     write.writerows([header] + data)
 
 
 def main():
