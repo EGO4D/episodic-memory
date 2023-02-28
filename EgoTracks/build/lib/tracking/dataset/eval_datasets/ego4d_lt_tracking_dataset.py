@@ -17,6 +17,7 @@ class _EGO4DLTTrackingDataset(BaseDataset):
     def __init__(self, data_dir, annotation_path, split=None):
         super().__init__()
         self.data_dir = data_dir
+        self.split = split
         self.frames_dir = os.path.join(data_dir, "frames")
         self.info_dir = os.path.join(data_dir, "clip_info")
         self.annotation_path = annotation_path
@@ -24,7 +25,6 @@ class _EGO4DLTTrackingDataset(BaseDataset):
         self.clip_info = self.load_clip_info(os.path.join(data_dir, "clip_info.json"))
         self.sequences = self.get_sequences()
         self.sequence_list = [seq.name for seq in self.sequences]
-        self.split = split
 
     def get_sequences(self):
         with pathmgr.open(self.annotation_path, "r") as f:
@@ -72,19 +72,6 @@ class _EGO4DLTTrackingDataset(BaseDataset):
             assert len(clip["annotations"]) == 1
             for cann in clip["annotations"]:
                 for target_id, query_set in cann["query_sets"].items():
-                    if not query_set["is_valid"]:
-                        continue
-                    if "lt_track" not in query_set:
-                        continue
-
-                    # Cannot find the extracted frame dir
-                    frames = self.clip_info[clip_uid]["frames"]
-                    frames = [
-                        os.path.join(self.frames_dir, clip_uid, f) for f in frames
-                    ]
-                    if frames is None:
-                        continue
-
                     object_title = query_set["object_title"]
                     # visual_crop
                     visual_crop = query_set["visual_crop"]
@@ -96,25 +83,43 @@ class _EGO4DLTTrackingDataset(BaseDataset):
                             visual_crop["height"],
                         ]
                     }
-                    visual_clip = {}
-                    for frame in query_set["visual_clip"]:
-                        visual_clip[frame[frame_number_key]] = [
-                            frame["x"],
-                            frame["y"],
-                            frame["width"],
-                            frame["height"],
-                        ]
-                    gt_bbox_dict = {}
-                    for frame in query_set["lt_track"]:
-                        gt_bbox_dict[frame[frame_number_key]] = [
-                            frame["x"],
-                            frame["y"],
-                            frame["width"],
-                            frame["height"],
-                        ]
-                    # Make sure the gt_bbox_dict contain all the previous bbox
-                    gt_bbox_dict.update(visual_clip)
-                    gt_bbox_dict.update(visual_crop)
+
+                    # Cannot find the extracted frame dir
+                    frames = self.clip_info[clip_uid]["frames"]
+                    frames = [
+                        os.path.join(self.frames_dir, clip_uid, f) for f in frames
+                    ]
+                    if frames is None:
+                        continue
+
+                    # if it's an unannotated test set, there are no these fields:
+                    if self.split != "test":
+                        if not query_set["is_valid"]:
+                            continue
+                        if "lt_track" not in query_set:
+                            continue
+                        visual_clip = {}
+                        for frame in query_set["visual_clip"]:
+                            visual_clip[frame[frame_number_key]] = [
+                                frame["x"],
+                                frame["y"],
+                                frame["width"],
+                                frame["height"],
+                            ]
+                        gt_bbox_dict = {}
+                        for frame in query_set["lt_track"]:
+                            gt_bbox_dict[frame[frame_number_key]] = [
+                                frame["x"],
+                                frame["y"],
+                                frame["width"],
+                                frame["height"],
+                            ]
+                        # Make sure the gt_bbox_dict contain all the previous bbox
+                        gt_bbox_dict.update(visual_clip)
+                        gt_bbox_dict.update(visual_crop)
+                    else:
+                        visual_clip = None
+                        gt_bbox_dict = {}
 
                     seq = Sequence(
                         f"{clip_uid}_{target_id}_{object_title}",
@@ -139,14 +144,14 @@ class _EGO4DLTTrackingDataset(BaseDataset):
 class EGO4DLTTrackingDataset(torch.utils.data.Dataset):
     """EGO4D LTT dataset."""
 
-    def __init__(self, data_dir, annotation_path, ratio=1.0):
+    def __init__(self, data_dir, annotation_path, ratio=1.0, split=None):
         """
         ratio: what percent of the dataset to load, used mostly for testing purpose
         pre_download: pre-download frames from manifold, this is intended to work in FB only
         """
         super().__init__()
         # Split can be test, val, or ltrval (a validation split consisting of videos from the official train set)
-        dataset = _EGO4DLTTrackingDataset(data_dir, annotation_path)
+        dataset = _EGO4DLTTrackingDataset(data_dir, annotation_path, split)
         # Only load a portion of the dataset
         n_total = int(len(dataset) * ratio) + 1
         self.sequences = dataset.sequences[:n_total]

@@ -191,7 +191,6 @@ def run_train(
 
 def result2submission(args):
     cfg = setup(args)
-    use_visual_clip = cfg.EVAL.EGO4DLT.USE_VISUAL_CLIP
     result_dir = os.path.join(
         cfg.OUTPUT_DIR,
         "eval",
@@ -248,7 +247,7 @@ def main():
         args=(args,),
     )
 
-    # result2submission(args)
+    result2submission(args)
 
     # if args.eval_only:
     #     launch_job(

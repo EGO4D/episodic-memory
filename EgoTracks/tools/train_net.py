@@ -238,14 +238,14 @@ def main():
     args.eval_only = True
     args.config_file = "configs/STARK/stark_st_base.yaml"
     # eval_main(args)
-    # launch_job(
-    #     eval_main,
-    #     args.num_gpus,
-    #     num_machines=args.num_machines,
-    #     init_method=args.dist_url,
-    #     machine_rank=args.machine_rank,
-    #     args=(args,),
-    # )
+    launch_job(
+        eval_main,
+        args.num_gpus,
+        num_machines=args.num_machines,
+        init_method=args.dist_url,
+        machine_rank=args.machine_rank,
+        args=(args,),
+    )
 
     result2submission(args)
 

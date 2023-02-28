@@ -54,7 +54,7 @@ def eval_ego4d_lt_tracking(model, cfg):
     # Initilize data loader
     logging.info("building dataset")
     eval_dataset = EGO4DLTTrackingDataset(
-        data_dir, annotation_path, ratio=eval_ratio
+        data_dir, annotation_path, ratio=eval_ratio, split="test"
     )
     logging.info(f"{global_rank}: Length of eval dataset {len(eval_dataset)}")
 
@@ -106,45 +106,7 @@ def eval_ego4d_lt_tracking(model, cfg):
 
         logging.info(f"Processing {clip_uid}")
 
-        if track_mode == "first_visible":
-            frame_numbers = sorted(list(seq.gt_bbox_dict.keys()))
-            start_frame_number = frame_numbers[0]
-            frame_numbers = list(range(start_frame_number, len(seq.frames)))
-            frame_numbers = [target_frame_number] + frame_numbers
-
-            # use the location of the first frame to init the tracker
-            init_bbox = seq.gt_bbox_dict[frame_numbers[0]]
-            init_location = xywh_2_cxywh(init_bbox)[:2]
-
-            meta_data = {
-                "target_bbox": target_bbox,
-                "target_id": target_id,
-                "init_location": init_location,
-                "frame_numbers": frame_numbers,
-            }
-
-            pred_traj = model.inference(seq, meta_data)
-            pred_bboxes = pred_traj[target_id]["bboxes"]
-        elif track_mode == "first":
-            frame_numbers = list(range(len(seq.frames)))
-            frame_numbers = [target_frame_number] + frame_numbers
-
-            # use the center of the first frame to init the tracker
-            img = opencv_loader(seq.frames[0])
-            h, w, c = img.shape
-            assert c == 3
-            init_location = [w // 2, h // 2]
-
-            meta_data = {
-                "target_bbox": target_bbox,
-                "target_id": target_id,
-                "init_location": init_location,
-                "frame_numbers": frame_numbers,
-            }
-
-            pred_traj = model.inference(seq, meta_data)
-            pred_bboxes = pred_traj[target_id]["bboxes"]
-        elif track_mode == "forward_backward_from_vcrop":
+        if track_mode == "forward_backward_from_vcrop":
             total_frames = len(seq.frames)
 
             if cfg.EVAL.EGO4DLT.SAMPLE_5FPS == True:
@@ -175,23 +137,6 @@ def eval_ego4d_lt_tracking(model, cfg):
             model.reset_tracker()
 
             pred_bboxes = backward_pred_bboxes[::-1][:-1] + forward_pred_bboxes
-        elif track_mode == "occurrence":
-            visible_frames = seq.gt_bbox_dict.keys()
-            occurrences = seperate_occurrances(visible_frames)
-            pred_bboxes = []
-            for occ in occurrences:
-                meta_data = {
-                    "target_bbox": seq.gt_bbox_dict[occ[0]],
-                    "target_id": target_id,
-                    "frame_numbers": occ,
-                }
-
-                pred_traj = model.inference(seq, meta_data)
-                p_bboxes = pred_traj[target_id]["bboxes"]
-                pred_bboxes.extend(p_bboxes)
-
-        elif track_mode == "vq_forward_backward":
-            pass
         else:
             raise NotImplementedError(f"Track mode {track_mode} is not implemented.")
 
@@ -224,131 +169,3 @@ def gather_ego4d_lt_tracking_result(result):
         gathered[seq_name] = res
 
     return gathered
-
-
-def calculate_ego4d_lt_tracking_metrics(cfg):
-    use_visual_clip = cfg.EVAL.EGO4DLT.USE_VISUAL_CLIP
-    result_dir = os.path.join(
-        cfg.OUTPUT_DIR,
-        "eval",
-        "EGO4DLTTracking",
-        f"{cfg.EVAL.EGO4DLT.TRACK_MODE}",
-        f"{cfg.MODEL_TYPE}",
-    )
-    intermediate_dir = os.path.join(result_dir, "intermediate_result")
-
-    result = {}
-    # Strange, sometimes certain nodes do not save any result
-    # for shard in range(total_machines):
-    #     path = os.path.join(result_dir, "intermediate_result", f"{shard}.pkl")
-    #     logging.info(path)
-    #     shard_result = pkl.load(pathmgr.open(path, "rb"))
-    #     result.extend(shard_result)
-    files = pathmgr.ls(intermediate_dir)
-    for f in files:
-        path = os.path.join(intermediate_dir, f)
-        logging.info(path)
-        shard_result = pkl.load(pathmgr.open(path, "rb"))
-        result.update(shard_result)
-
-    result = gather_ego4d_lt_tracking_result(result)
-    path = os.path.join(result_dir, "result.pkl")
-    pkl.dump(result, pathmgr.open(path, "wb"))
-    logging.info(f"Total number of predicted clips is {len(result)}.")
-
-    annotation_path = cfg.EVAL.EGO4DLT.ANNOTATION_PATH
-    data_dir = cfg.EVAL.EGO4DLT.DATA_DIR
-    eval_ratio = cfg.EVAL.EGO4DLT.EVAL_RATIO
-
-    # Initilize data loader
-    logging.info("building dataset")
-    eval_dataset = EGO4DLTTrackingDataset(data_dir, annotation_path, ratio=eval_ratio)
-
-    iou_per_video = []
-    all_pred_bboxes = []
-    all_gt_bboxes = []
-    all_pred_scores = []
-
-    for seq in eval_dataset:
-        pred_bbox_dict = {r["frame_number"]: r for r in result[seq.name]["pred_bboxes"]}
-        # Only evaluate on frames annotated, all others ignored
-        exclude_frame_numbers = [
-            b["frame_number"]
-            for b in result[seq.name]["pred_bboxes"]
-            if b["type"] == "gt"
-        ]
-        exclude_frame_numbers = set(exclude_frame_numbers)
-
-        if not use_visual_clip:
-            for frame_number, _ in seq.visual_crop.items():
-                exclude_frame_numbers.add(frame_number)
-        else:
-            raise NotImplementedError
-
-        logging.info(exclude_frame_numbers)
-
-        total_frame_numbers = len(seq.frames)
-        ious = []
-        gt_bboxes = [None for _ in range(total_frame_numbers)]
-        pred_bboxes = [None for _ in range(total_frame_numbers)]
-        pred_scores = [0 for _ in range(total_frame_numbers)]
-        for frame_number, gt_bbox in seq.gt_bbox_dict.items():
-            # Ignore excluded frames.
-            if frame_number in exclude_frame_numbers:
-                continue
-            gt_bboxes[frame_number] = gt_bbox
-            if frame_number not in pred_bbox_dict:
-                ious.append(0)
-            else:
-                pred_bbox = pred_bbox_dict[frame_number]["bbox"]
-                pred_score = pred_bbox_dict[frame_number]["score"]
-                iou = compute_overlaps([gt_bbox], [pred_bbox])[0]
-                ious.append(iou)
-                pred_bboxes[frame_number] = pred_bbox
-                pred_scores[frame_number] = pred_score
-
-        for frame_number, pred_bbox in pred_bbox_dict.items():
-            pred_bboxes[frame_number] = pred_bbox["bbox"]
-            pred_scores[frame_number] = pred_bbox["score"]
-
-        if len(ious):
-            iou_per_video.append(np.mean(ious))
-
-        all_gt_bboxes.append(gt_bboxes)
-        all_pred_bboxes.append(pred_bboxes)
-        all_pred_scores.append(pred_scores)
-
-    average_overlap = np.mean(iou_per_video)
-    precision, recall = compute_precision_and_recall(
-        all_pred_scores, all_pred_bboxes, all_gt_bboxes
-    )
-    f1_score, pr_score, re_score = compute_f_score(precision, recall)
-    logging.info(f"IoU per video: {iou_per_video}")
-    logging.info(f"Eval result mIoU {average_overlap}, f1 {f1_score}.")
-
-    # save evaluation result
-    path = os.path.join(result_dir, f"{cfg.MODEL_TYPE}_eval_result.pkl")
-    pkl.dump(
-        {
-            "total_video": len(iou_per_video),
-            "F1": f1_score,
-            "precision_score": pr_score,
-            "re_score": re_score,
-            "AO": average_overlap,
-            "precision": precision,
-            "recall": recall,
-            "result_dir": result_dir,
-            "MODEL_WEIGHTS": cfg.MODEL.WEIGHTS,
-        },
-        pathmgr.open(path, "wb"),
-    )
-
-    return {
-        "total_video": len(iou_per_video),
-        "F1": f1_score,
-        "precision_score": pr_score,
-        "re_score": re_score,
-        "AO": average_overlap,
-        "result_dir": result_dir,
-        "MODEL_WEIGHTS": cfg.MODEL.WEIGHTS,
-    }

@@ -165,7 +165,7 @@ cfg.EVAL.GOT10K.VISUALIZE = False
 # Ego4D Lt track dataset config
 cfg.EVAL.EGO4DLT = CfgNode()
 cfg.EVAL.EGO4DLT.ANNOTATION_PATH = (
-    "/checkpoint/haotang/data/EgoTracks/annotations/challenge_test_v1.json"
+    "/checkpoint/haotang/data/EgoTracks/annotations/challenge_test_v1_unannotated.json"
 )
 cfg.EVAL.EGO4DLT.DATA_DIR = "/checkpoint/haotang/data/EgoTracks/clips_frames"
 cfg.EVAL.EGO4DLT.SAMPLE_5FPS = True
