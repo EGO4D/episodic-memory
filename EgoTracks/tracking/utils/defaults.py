@@ -73,9 +73,9 @@ Run on multiple machines:
     # Therefore we use a deterministic way to obtain port,
     # so that users are aware of orphan processes by seeing the port occupied.
     port = (
-        2**15
-        + 2**14
-        + hash(os.getuid() if sys.platform != "win32" else 1) % 2**14
+        2 ** 15
+        + 2 ** 14
+        + hash(os.getuid() if sys.platform != "win32" else 1) % 2 ** 14
     )
     parser.add_argument(
         "--dist-url",

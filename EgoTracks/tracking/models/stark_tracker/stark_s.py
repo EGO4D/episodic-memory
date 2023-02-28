@@ -45,7 +45,7 @@ class STARKS(nn.Module):
         self.head_type = head_type
         if head_type == "CORNER":
             self.feat_sz_s = int(box_head.feat_sz)
-            self.feat_len_s = int(box_head.feat_sz**2)
+            self.feat_len_s = int(box_head.feat_sz ** 2)
 
     def forward(
         self,

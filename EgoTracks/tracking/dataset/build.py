@@ -31,7 +31,7 @@ def names2datasets(name_list: List, cfg, image_loader=opencv_loader):
             "VID",
             "TRACKINGNET",
             "EGO4DVQ",
-            "EGO4DLTT"
+            "EGO4DLTT",
         ], f"Dataset {name} not found!"
         if name == "LASOT":
             datasets.append(
@@ -107,7 +107,7 @@ def names2datasets(name_list: List, cfg, image_loader=opencv_loader):
                     cached_sequence_list_dir=cfg.DATA.CACHED_TRACKINGNET_SEQUENCE_LIST_DIR,
                 )
             )
-	
+
         if name == "EGO4DLTT":
             datasets.append(
                 EGO4DLTT(

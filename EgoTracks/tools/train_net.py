@@ -209,14 +209,15 @@ def result2submission(args):
         shard_result = pkl.load(pathmgr.open(path, "rb"))
         result.update(shard_result)
 
-
     submission = defaultdict(dict)
     for k, v in result.items():
         data = []
         for bbox_dict in v["pred_bboxes"]:
-            submission[k][int(bbox_dict["frame_number"])] = bbox_dict["bbox"] + [bbox_dict["score"]]
-        
-    with open(os.path.join(result_dir, f"submission.json"), "w") as f:  
+            submission[k][int(bbox_dict["frame_number"])] = bbox_dict["bbox"] + [
+                bbox_dict["score"]
+            ]
+
+    with open(os.path.join(result_dir, f"submission.json"), "w") as f:
         json.dump(submission, f, indent=4)
 
 

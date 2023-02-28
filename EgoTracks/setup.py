@@ -24,7 +24,5 @@ setup(
     # ],
     packages=find_packages(exclude=("tests", "tools")) + list(PROJECTS.keys()),
     package_dir=PROJECTS,
-    package_data={
-        "tracking.tools": ["**"]
-    }
+    package_data={"tracking.tools": ["**"]},
 )

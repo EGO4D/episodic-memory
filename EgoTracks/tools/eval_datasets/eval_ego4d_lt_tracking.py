@@ -111,7 +111,9 @@ def eval_ego4d_lt_tracking(model, cfg):
 
             if cfg.EVAL.EGO4DLT.SAMPLE_5FPS == True:
                 # This assumes the exported clips are 30FPS
-                forward_frame_numbers = list(range(target_frame_number, total_frames, 6))
+                forward_frame_numbers = list(
+                    range(target_frame_number, total_frames, 6)
+                )
                 backward_frame_numbers = list(range(target_frame_number, -1, -6))
             else:
                 forward_frame_numbers = list(range(target_frame_number, total_frames))

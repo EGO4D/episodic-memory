@@ -20,16 +20,16 @@ from tqdm import tqdm
 class ExtractFramesWorkflowParams(NamedTuple):
     num_process: int = 8
     clip_dir: str = "/datasets01/ego4d_track2/v1/clips"
-    annotation_path: str = ("/checkpoint/haotang/data/EgoTracks/annotations/challenge_test_v1.json")
+    annotation_path: str = (
+        "/checkpoint/haotang/data/EgoTracks/annotations/challenge_test_v1.json"
+    )
     output_dir: str = "/checkpoint/haotang/data/EgoTracks/clips_frames"
 
 
 def run_single_process(clip_uid: str, params: ExtractFramesWorkflowParams):
     frames_save_dir = os.path.join(params.output_dir, "frames", f"{clip_uid}")
     info_save_dir = os.path.join(params.output_dir, "clip_info")
-    info_save_path = os.path.join(
-        params.output_dir, "clip_info", f"{clip_uid}.csv"
-    )
+    info_save_path = os.path.join(params.output_dir, "clip_info", f"{clip_uid}.csv")
     os.makedirs(frames_save_dir, exist_ok=True)
     os.makedirs(info_save_dir, exist_ok=True)
     clip_path = os.path.join(params.clip_dir, f"{clip_uid}.mp4")
@@ -51,7 +51,6 @@ def run_single_process(clip_uid: str, params: ExtractFramesWorkflowParams):
             )
             # cv2.imwrite(os.path.join(local_output_dir, f"{frame_number}.jpg"), image)
             frame_numbers.append(f"{frame_number}.jpg")
-
 
     with open(info_save_path, "w") as f:
         write = csv.writer(f, delimiter="\n")

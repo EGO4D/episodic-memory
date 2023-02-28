@@ -3,6 +3,7 @@ from typing import Dict
 
 import numpy as np
 from PIL import Image
+
 # from tracking.utils.env import pathmgr
 
 

@@ -56,7 +56,10 @@ class _EGO4DLTTrackingDataset(BaseDataset):
         return clip_info
 
     def get_lt_track(
-        self, video_uid: str, clip_uid: str, frame_number_key: str = "exported_clip_frame_number"
+        self,
+        video_uid: str,
+        clip_uid: str,
+        frame_number_key: str = "exported_clip_frame_number",
     ) -> Dict:
         vq_video_dict = self.vq_video_dict
         ann = vq_video_dict.get(video_uid)

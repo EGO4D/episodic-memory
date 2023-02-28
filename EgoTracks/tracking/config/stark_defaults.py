@@ -156,4 +156,3 @@ cfg.EVAL.EGO4DLT.TRACK_MODE = "forward_backward_from_vcrop"
 cfg.EVAL.EGO4DLT.USE_VISUAL_CLIP = False
 cfg.EVAL.EGO4DLT.EVAL_RATIO = 1.0
 cfg.EVAL.EGO4DLT.PRE_DOWNLOAD = False
-	
