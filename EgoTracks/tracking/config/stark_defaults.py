@@ -87,10 +87,10 @@ cfg.DATA.CACHED_TRACKINGNET_SEQUENCE_LIST_DIR: str = (
 cfg.DATA.LASOT_DATA_DIR: str = "manifold://fai4ar/tree/datasets/LaSOTBenchmark"
 cfg.DATA.GOT10K_DATA_DIR: str = "manifold://tracking/tree/data/got10k"
 cfg.DATA.CACHED_GOT10K_META_INFO_DIR: str = "manifold://tracking/tree/data/got10k/cache"
-cfg.DATA.EGO4DVQ_DATA_DIR: str = "manifold://tracking/tree/data/ego4d/vq_frames"
-cfg.DATA.EGO4DVQ_ANNOTATION_PATH: str = (
-    "manifold://tracking/tree/ego4d/v1/annotations/vq_train.json"
+cfg.DATA.EGO4DLTT_ANNOTATION_PATH = (
+    "/checkpoint/haotang/data/EgoTracks/annotations/train_v1.json"
 )
+cfg.DATA.EGO4DLTT_DATA_DIR = "/checkpoint/haotang/data/EgoTracks/clips_frames"
 cfg.DATA.DATA_FRACTION = None
 # DATA.TRAIN
 cfg.DATA.TRAIN = CfgNode()
@@ -173,3 +173,4 @@ cfg.EVAL.EGO4DLT.TRACK_MODE = "forward_backward_from_vcrop"
 cfg.EVAL.EGO4DLT.USE_VISUAL_CLIP = False
 cfg.EVAL.EGO4DLT.EVAL_RATIO = 1.0
 cfg.EVAL.EGO4DLT.PRE_DOWNLOAD = False
+	

@@ -230,43 +230,28 @@ def result2submission(args):
 
 
 def main():
-    date = datetime.today().strftime("%Y%m%d")
-    time = datetime.today().strftime("%H%M%S")
-    dist_url = f"zeus://{date}_{time}"
     args = default_argument_parser().parse_args()
 
-    args.eval_only = True
     args.config_file = "configs/STARK/stark_st_base.yaml"
-    # eval_main(args)
-    launch_job(
-        eval_main,
-        args.num_gpus,
-        num_machines=args.num_machines,
-        init_method=args.dist_url,
-        machine_rank=args.machine_rank,
-        args=(args,),
-    )
-
-    result2submission(args)
-
-    # if args.eval_only:
-    #     launch_job(
-    #         eval_main,
-    #         args.num_gpus,
-    #         num_machines=args.num_machines,
-    #         init_method=args.dist_url,
-    #         machine_rank=args.machine_rank,
-    #         args=(args,),
-    #     )
-    # else:
-    #     launch_job(
-    #         train_main,
-    #         args.num_gpus,
-    #         num_machines=args.num_machines,
-    #         init_method=args.dist_url,
-    #         machine_rank=args.machine_rank,
-    #         args=(args,),
-    #     )
+    if args.eval_only:
+        launch_job(
+            eval_main,
+            args.num_gpus,
+            num_machines=args.num_machines,
+            init_method=args.dist_url,
+            machine_rank=args.machine_rank,
+            args=(args,),
+        )
+        result2submission(args)
+    else:
+        launch_job(
+            train_main,
+            args.num_gpus,
+            num_machines=args.num_machines,
+            init_method=args.dist_url,
+            machine_rank=args.machine_rank,
+            args=(args,),
+        )
 
 
 if __name__ == "__main__":

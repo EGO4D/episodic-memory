@@ -11,6 +11,7 @@ from tracking.dataset.trackingdataset import TrackingDataset
 from tracking.dataset.train_datasets.coco_seq import MSCOCOSeq
 from tracking.dataset.train_datasets.ego4d_vq import Ego4DVQ
 from tracking.dataset.train_datasets.got10k import Got10k
+from tracking.dataset.train_datasets.ego4d_lt_tracking import EGO4DLTT
 from tracking.dataset.train_datasets.lasot import Lasot
 from tracking.dataset.train_datasets.tracking_net import TrackingNet
 from tracking.utils.utils import opencv_loader
@@ -30,6 +31,7 @@ def names2datasets(name_list: List, cfg, image_loader=opencv_loader):
             "VID",
             "TRACKINGNET",
             "EGO4DVQ",
+            "EGO4DLTT"
         ], f"Dataset {name} not found!"
         if name == "LASOT":
             datasets.append(
@@ -103,6 +105,16 @@ def names2datasets(name_list: List, cfg, image_loader=opencv_loader):
                     image_loader=image_loader,
                     data_fraction=cfg.DATA.DATA_FRACTION,
                     cached_sequence_list_dir=cfg.DATA.CACHED_TRACKINGNET_SEQUENCE_LIST_DIR,
+                )
+            )
+	
+        if name == "EGO4DLTT":
+            datasets.append(
+                EGO4DLTT(
+                    cfg.DATA.EGO4DLTT_DATA_DIR,
+                    cfg.DATA.EGO4DLTT_ANNOTATION_PATH,
+                    image_loader=image_loader,
+                    data_fraction=cfg.DATA.DATA_FRACTION,
                 )
             )
 

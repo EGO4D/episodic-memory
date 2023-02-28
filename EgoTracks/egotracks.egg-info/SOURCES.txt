@@ -35,6 +35,7 @@ tracking/dataset/processing/processing_utils.py
 tracking/dataset/processing/stark_processing.py
 tracking/dataset/train_datasets/__init__.py
 tracking/dataset/train_datasets/coco_seq.py
+tracking/dataset/train_datasets/ego4d_lt_tracking.py
 tracking/dataset/train_datasets/ego4d_vq.py
 tracking/dataset/train_datasets/got10k.py
 tracking/dataset/train_datasets/lasot.py
