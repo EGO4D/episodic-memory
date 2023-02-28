@@ -7,6 +7,11 @@ pip install detectron2 -f https://dl.fbaipublicfiles.com/detectron2/wheels/cu101
 pip install torch==1.8.1+cu101 torchvision==0.9.1+cu101 torchaudio==0.8.1 -f https://download.pytorch.org/whl/torch_stable.html
 ```
 
+Then install EgoTracks as package:
+```
+python setup.py install
+```
+
 ## Download clips
 Please follow https://github.com/EGO4D/docs/blob/main/docs/data/egotracks.md to download train and val annotations.
 
@@ -23,6 +28,7 @@ python tools/preprocess/extract_ego4d_clip_frames.py
 
 ## Finetuning on EgoTracks
 We used STARK (Res50) as pre-trained models, so download the model weights from https://drive.google.com/drive/folders/1fSgll53ZnVKeUn22W37Nijk-b9LGhMdN
+Or you can use our trained checkpoint at https://drive.google.com/file/d/14vZmWxYSGJXZGxD5U1LthvvTR_eRzWCw/view?usp=share_link
 
 Change the following paths in the tracking/config/stark_defaults.py:
 * cfg.DATA.EGO4DLTT_ANNOTATION_PATH = "your_path/train_v1.json"
