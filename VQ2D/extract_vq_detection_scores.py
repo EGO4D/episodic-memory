@@ -175,6 +175,7 @@ class WorkerWithDevice(mp.Process):
     def work(self, task_queue, results_queue):
         # Create detector
         detectron_cfg = get_detectron_cfg()
+        detectron_cfg.set_new_allowed(True)
         detectron_cfg.merge_from_file(self.cfg.model.config_path)
         detectron_cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = self.cfg.model.score_thresh
         detectron_cfg.MODEL.WEIGHTS = self.cfg.model.checkpoint_path

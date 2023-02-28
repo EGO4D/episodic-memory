@@ -149,8 +149,8 @@ chmod +x ./scripts/extract_vq_detections.sh
 **Step (2)** Peak detection and bidirectional tracking.
 
 ```
-./scripts/infer_vq.sh $MODEL_ROOT $DETECTIONS_SAVE_ROOT val 8 0.50 0.10
-./scripts/infer_vq.sh $MODEL_ROOT $DETECTIONS_SAVE_ROOT test_unannotated 8 0.50 0.10
+./scripts/infer_vq.sh $MODEL_ROOT $DETECTIONS_SAVE_ROOT val 8 0.50 0.20
+./scripts/infer_vq.sh $MODEL_ROOT $DETECTIONS_SAVE_ROOT test_unannotated 8 0.50 0.20
 ```
 
 **Notes:**
@@ -163,11 +163,64 @@ chmod +x ./scripts/extract_vq_detections.sh
 * To participate in the challenge, submit the inference json obtained for the test_unannotated split on evalai.
 
 ## Pre-trained models and detection scores
-For reproducibility and conveneice,  we provide pre-trained models and corresponding detection scores for the [SiamRCNN baseline](https://arxiv.org/pdf/2110.07058.pdf) and [ImprovedBaselines model](https://github.com/facebookresearch/vq2d_cvpr). They can be downloaded using the ego4d CLI as follows:
+For reproducibility and conveneice,  we provide pre-trained models and corresponding detection scores for the [SiamRCNN](https://arxiv.org/pdf/2110.07058.pdf), [ImprovedBaselines](https://arxiv.org/pdf/2208.01949.pdf), and [NegativeFramesMatter](https://arxiv.org/pdf/2211.10528.pdf) models. They can be downloaded using the ego4d CLI as follows:
 
 ```
 python -m ego4d.cli.cli -y --output_directory /path/to/output/ --datasets vq2d_models vq2d_detections
 ```
 
+The validation results for these models are shown below.
+| Method                 | stAP @ 0.25 |  stAP | tAP @ 0.25 |  tAP  | recall %  | success % |
+|------------------------|:-----------:|:-----:|:----------:|:-----:|:---------:|:---------:|
+| SiamRCNN               |    0.153    | 0.058 |    0.225   | 0.134 |   32.919  |   43.244  |
+| Improved Baselines     |    0.195    | 0.078 |    0.258   | 0.157 |   37.882  |   47.903  |
+| Negative Frames Matter |    0.189    | 0.075 |    0.255   | 0.154 |   37.666  |   47.681  |
+
+These were generated using the following commands:
+```
+# SiamRCNN
+./scripts/infer_vq.sh $PRETRAINED_ROOT/siam_rcnn_residual $DETECTIONS_ROOT/detections_siam_rcnn_residual val 8 0.50 0.20
+
+# Improved Baselines
+./scripts/infer_vq.sh $PRETRAINED_ROOT/improved_baselines $DETECTIONS_ROOT/detections_improved_baselines val 8 0.50 0.20
+
+# Negative Frames Matter
+./scripts/infer_vq.sh $PRETRAINED_ROOT/negative_frames_matter $DETECTIONS_ROOT/detections_negative_frames_matter val 8 0.25 0.20
+```
+where `PRETRAINED_ROOT` and `DETECTIONS_ROOT` are the directories where the pretrained-models and detections are saved, respectively.  Please cite the following papers/reports for the respective models.
+
+**SiamRCNN:**
+```
+@inproceedings{grauman2022ego4d,
+title={Ego4d: Around the world in 3,000 hours of egocentric video},
+author={Grauman, Kristen and Westbury, Andrew and Byrne, Eugene and Chavis, Zachary and Furnari, Antonino and Girdhar, Rohit and Hamburger, Jackson and Jiang, Hao and Liu, Miao and Liu, Xingyu and others},
+booktitle={Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition},
+pages={18995--19012},
+year={2022}
+}
+```
+
+**Improved Baselines:**
+```
+@article{xu2022negative,
+  title={Negative Frames Matter in Egocentric Visual Query 2D Localization},
+  author={Xu, Mengmeng and Fu, Cheng-Yang and Li, Yanghao and Ghanem, Bernard and Perez-Rua, Juan-Manuel and Xiang, Tao},
+  journal={arXiv preprint arXiv:2208.01949},
+  year={2022}
+}
+```
+
+**Negative Frames Matter:**
+```
+@article{xu2022where,
+  doi = {10.48550/ARXIV.2211.10528},
+  url = {https://arxiv.org/abs/2211.10528},
+  author = {Xu, Mengmeng and Li, Yanghao and Fu, Cheng-Yang and Ghanem, Bernard and Xiang, Tao and Perez-Rua, Juan-Manuel},
+  title = {Where is my Wallet? Modeling Object Proposal Sets for Egocentric Visual Query Localization},
+  journal={arXiv preprint arXiv:2211.10528},
+  year={2022}
+}
+```
+
 ## Acknowledgements
-This codebase relies on [detectron2](https://github.com/facebookresearch/detectron2), [PyTracking](https://github.com/visionml/pytracking), [pfilter](https://github.com/johnhw/pfilter) and [ActivityNet](https://github.com/activitynet/ActivityNet) repositories.
+This codebase relies on [detectron2](https://github.com/facebookresearch/detectron2), [vq2d_cvpr](https://github.com/facebookresearch/vq2d_cvpr), [PyTracking](https://github.com/visionml/pytracking), [pfilter](https://github.com/johnhw/pfilter) and [ActivityNet](https://github.com/activitynet/ActivityNet) repositories.
