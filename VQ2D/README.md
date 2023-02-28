@@ -149,8 +149,8 @@ chmod +x ./scripts/extract_vq_detections.sh
 **Step (2)** Peak detection and bidirectional tracking.
 
 ```
-./scripts/infer_vq.sh $MODEL_ROOT $DETECTIONS_SAVE_ROOT val 8 0.50 0.10
-./scripts/infer_vq.sh $MODEL_ROOT $DETECTIONS_SAVE_ROOT test_unannotated 8 0.50 0.10
+./scripts/infer_vq.sh $MODEL_ROOT $DETECTIONS_SAVE_ROOT val 8 0.50 0.20
+./scripts/infer_vq.sh $MODEL_ROOT $DETECTIONS_SAVE_ROOT test_unannotated 8 0.50 0.20
 ```
 
 **Notes:**
@@ -168,7 +168,27 @@ For reproducibility and conveneice,  we provide pre-trained models and correspon
 ```
 python -m ego4d.cli.cli -y --output_directory /path/to/output/ --datasets vq2d_models vq2d_detections
 ```
-Please cite the following papers/reports for the respective models. \
+
+The validation results for these models are shown below.
+| Method                 | stAP @ 0.25 |  stAP | tAP @ 0.25 |  tAP  | recall %  | success % |
+|------------------------|:-----------:|:-----:|:----------:|:-----:|:---------:|:---------:|
+| SiamRCNN               |    0.153    | 0.058 |    0.225   | 0.134 |   32.919  |   43.244  |
+| Improved Baselines     |    0.195    | 0.078 |    0.258   | 0.157 |   37.882  |   47.903  |
+| Negative Frames Matter |    0.189    | 0.075 |    0.255   | 0.154 |   37.666  |   47.681  |
+
+These were generated using the following commands:
+```
+# SiamRCNN
+./scripts/infer_vq.sh $PRETRAINED_ROOT/siam_rcnn_residual $DETECTIONS_ROOT/detections_siam_rcnn_residual val 8 0.50 0.20
+
+# Improved Baselines
+./scripts/infer_vq.sh $PRETRAINED_ROOT/improved_baselines $DETECTIONS_ROOT/detections_improved_baselines val 8 0.50 0.20
+
+# Negative Frames Matter
+./scripts/infer_vq.sh $PRETRAINED_ROOT/negative_frames_matter $DETECTIONS_ROOT/detections_negative_frames_matter val 8 0.25 0.20
+```
+where `PRETRAINED_ROOT` and `DETECTIONS_ROOT` are the directories where the pretrained-models and detections are saved, respectively.  Please cite the following papers/reports for the respective models.
+
 **SiamRCNN:**
 ```
 @inproceedings{grauman2022ego4d,
@@ -180,7 +200,7 @@ year={2022}
 }
 ```
 
-**ImprovedBaselines:**
+**Improved Baselines:**
 ```
 @article{xu2022negative,
   title={Negative Frames Matter in Egocentric Visual Query 2D Localization},
@@ -190,7 +210,7 @@ year={2022}
 }
 ```
 
-**NegativeFramesMatter:**
+**Negative Frames Matter:**
 ```
 @article{xu2022where,
   doi = {10.48550/ARXIV.2211.10528},
