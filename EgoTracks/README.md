@@ -61,3 +61,8 @@ And change the model weights path and output directory in test.sh, and then run:
 bash test.sh
 ```
 
+## Tracker demo
+To quickly see how the tracker works, run the following script on a few images:
+```sh
+python EgoTrakcs/tools/demo.py
+```
