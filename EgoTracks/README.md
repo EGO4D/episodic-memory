@@ -1,5 +1,11 @@
 # EgoTracks 
 
+## Download data and annotation
+The clips are the same as the VQ clips. So we download the clips and EgoTracks annotation as follows:
+```sh
+ego4d --output_directory ./ --datasets egotracks clips --benchmark EM --version v2
+```
+
 ## Install packages
 ```sh
 pip install detectron2 -f https://dl.fbaipublicfiles.com/detectron2/wheels/cu101/torch1.8/index.html
@@ -11,9 +17,6 @@ Then install EgoTracks as package:
 ```
 python setup.py install
 ```
-
-## Download clips
-Please follow https://github.com/EGO4D/docs/blob/main/docs/data/egotracks.md to download train and val annotations.
 
 ## Preprocess - extract frames from exported clips
 Replace the following paths for reading and outputing to the correct place in ExtractFramesWorkflowParams in tools/preprocess/extract_ego4d_clip_frames.py: 
@@ -29,6 +32,11 @@ python tools/preprocess/extract_ego4d_clip_frames.py
 ## Finetuning on EgoTracks
 We used STARK (Res50) as pre-trained models, so download the model weights from https://drive.google.com/drive/folders/1fSgll53ZnVKeUn22W37Nijk-b9LGhMdN
 Or you can use our trained checkpoint at https://drive.google.com/file/d/14vZmWxYSGJXZGxD5U1LthvvTR_eRzWCw/view?usp=share_link
+
+And then extract frames for the training set:
+```sh
+python tools/preprocess/extract_ego4d_clip_annotated_frames.py
+```
 
 Change the following paths in the tracking/config/stark_defaults.py:
 * cfg.DATA.EGO4DLTT_ANNOTATION_PATH = "your_path/train_v1.json"

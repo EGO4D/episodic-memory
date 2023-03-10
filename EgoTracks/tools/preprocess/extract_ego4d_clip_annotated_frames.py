@@ -75,7 +75,7 @@ def extract_clip_ids(file_path: str):
             has_problem = False
             assert len(c["annotations"]) == 1
             for k, query_set in c["annotations"][0]["query_sets"].items():
-                # some VQ are not in, and some has problem with frame number conversion, ignore
+                # some objects from VQ are not annotated, and some clips have problem with frame number conversion, ignore
                 if "lt_track" not in query_set or "exported_clip_frame_number" not in query_set["visual_crop"]:
                     has_problem = True
                     continue
