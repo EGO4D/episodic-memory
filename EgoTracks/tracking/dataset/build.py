@@ -9,7 +9,6 @@ from tracking.dataset.dataloader import LTRLoader
 from tracking.dataset.processing.stark_processing import STARKProcessing
 from tracking.dataset.trackingdataset import TrackingDataset
 from tracking.dataset.train_datasets.coco_seq import MSCOCOSeq
-from tracking.dataset.train_datasets.ego4d_vq import Ego4DVQ
 from tracking.dataset.train_datasets.got10k import Got10k
 from tracking.dataset.train_datasets.ego4d_lt_tracking import EGO4DLTT
 from tracking.dataset.train_datasets.lasot import Lasot
@@ -77,15 +76,6 @@ def names2datasets(name_list: List, cfg, image_loader=opencv_loader):
                 MSCOCOSeq(
                     cfg.DATA.COCO_DATA_DIR,
                     version="2017",
-                    image_loader=image_loader,
-                    data_fraction=cfg.DATA.DATA_FRACTION,
-                )
-            )
-        if name == "EGO4DVQ":
-            datasets.append(
-                Ego4DVQ(
-                    cfg.DATA.EGO4DVQ_DATA_DIR,
-                    cfg.DATA.EGO4DVQ_ANNOTATION_PATH,
                     image_loader=image_loader,
                     data_fraction=cfg.DATA.DATA_FRACTION,
                 )

@@ -13,16 +13,8 @@ import torch.utils.data.distributed
 from tracking.dataset.eval_datasets.ego4d_lt_tracking_dataset import (
     EGO4DLTTrackingDataset,
 )
-from tracking.metrics.lt_tracking_metrics import (
-    compute_f_score,
-    compute_precision_and_recall,
-)
-from tracking.metrics.miou import compute_overlaps
-from tracking.tools.annotation.annotation_utils import seperate_occurrances
-from tracking.utils.bbox_helper import xywh_2_cxywh
 from tracking.utils.env import pathmgr
 from tracking.utils.meters import AverageMeter, ProgressMeter
-from tracking.utils.utils import opencv_loader
 
 
 def trivial_batch_collator(batch):
