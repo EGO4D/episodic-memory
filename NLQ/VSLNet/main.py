@@ -134,7 +134,7 @@ def main(configs, parser):
                     e_labels.to(device),
                     h_labels.to(device),
                 )
-                if configs.predictor == "bert":
+                if configs.predictor in ("bert", "st"):
                     word_ids = {key: val.to(device) for key, val in word_ids.items()}
                     # generate mask
                     query_mask = (

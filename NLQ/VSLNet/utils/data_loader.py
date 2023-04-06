@@ -29,12 +29,14 @@ def train_collate_fn(data):
     if not isinstance(word_ids[0], list):
         pad_input_ids, _ = pad_seq([ii["input_ids"] for ii in word_ids])
         pad_attention_mask, _ = pad_seq([ii["attention_mask"] for ii in word_ids])
-        pad_token_type_ids, _ = pad_seq([ii["token_type_ids"] for ii in word_ids])
-        word_ids = {
+        new_word_ids = {
             "input_ids": torch.LongTensor(pad_input_ids),
             "attention_mask": torch.LongTensor(pad_attention_mask),
-            "token_type_ids": torch.LongTensor(pad_token_type_ids),
         }
+        if "token_type_ids" in word_ids[0]:
+            pad_token_type_ids, _ = pad_seq([ii["token_type_ids"] for ii in word_ids])
+            new_word_ids["token_type_ids"] = torch.LongTensor(pad_token_type_ids)
+        word_ids = new_word_ids
         char_ids = None
     else:
         # process word ids
@@ -83,12 +85,14 @@ def test_collate_fn(data):
     if not isinstance(word_ids[0], list):
         pad_input_ids, _ = pad_seq([ii["input_ids"] for ii in word_ids])
         pad_attention_mask, _ = pad_seq([ii["attention_mask"] for ii in word_ids])
-        pad_token_type_ids, _ = pad_seq([ii["token_type_ids"] for ii in word_ids])
-        word_ids = {
+        new_word_ids = {
             "input_ids": torch.LongTensor(pad_input_ids),
             "attention_mask": torch.LongTensor(pad_attention_mask),
-            "token_type_ids": torch.LongTensor(pad_token_type_ids),
         }
+        if "token_type_ids" in word_ids[0]:
+            pad_token_type_ids, _ = pad_seq([ii["token_type_ids"] for ii in word_ids])
+            new_word_ids["token_type_ids"] = torch.LongTensor(pad_token_type_ids)
+        word_ids = new_word_ids
         char_ids = None
     else:
         # process word ids

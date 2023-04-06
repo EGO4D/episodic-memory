@@ -145,6 +145,23 @@ class Embedding(nn.Module):
         return emb
 
 
+class STEmbedding(nn.Module):
+    def __init__(self, text_agnostic=False):
+        super().__init__()
+        from sentence_transformers import SentenceTransformer
+
+        assert not text_agnostic
+        self.embedder = SentenceTransformer("all-mpnet-base-v2")
+        # Freeze the model.
+        for param in self.embedder.parameters():
+            param.requires_grad = False
+
+    def forward(self, word_ids, q_mask):
+        word_ids["attention_mask"] = q_mask
+        outputs = self.embedder(word_ids)
+        return outputs["sentence_embedding"].detach()
+
+
 class BertEmbedding(nn.Module):
     def __init__(self, text_agnostic=False):
         super(BertEmbedding, self).__init__()
@@ -334,7 +351,7 @@ class FeatureEncoder(nn.Module):
         features = x + self.pos_embedding(x)  # (batch_size, seq_len, dim)
         features = self.conv_block(features)  # (batch_size, seq_len, dim)
         features = self.attention_block(
-            features, mask=mask
+            features.squeeze(1), mask=mask
         )  # (batch_size, seq_len, dim)
         return features
 

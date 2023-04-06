@@ -7,6 +7,7 @@ from typing import List, Optional
 import numpy as np
 from nltk.tokenize import word_tokenize
 from tqdm import tqdm
+from sentence_transformers import SentenceTransformer
 
 from utils.data_util import (
     load_json,
@@ -50,7 +51,7 @@ class EpisodicNLQProcessor:
             for timestamp, exact_time, sentence, ann_uid, query_idx in zipper:
                 start_time = max(0.0, float(timestamp[0]) / fps)
                 end_time = min(float(timestamp[1]) / fps, duration)
-                if self._predictor != "bert":
+                if self._predictor not in ("bert", "st"):
                     words = word_tokenize(sentence.strip().lower(), language="english")
                 else:
                     words = sentence
@@ -308,6 +309,7 @@ def gen_or_load_dataset(configs):
             )
             + ".pkl",
         )
+    # NOTE dataset cache
     if os.path.exists(save_path):
         print(f"Loading data from existing save path {save_path}", flush=True)
         dataset = load_pickle(save_path)
@@ -331,10 +333,14 @@ def gen_or_load_dataset(configs):
         if val_data is None
         else [train_data, val_data, test_data]
     )
-    if configs.predictor == "bert":
+    if configs.predictor in ("bert", "st"):
         from transformers import BertTokenizer, BertForPreTraining
 
-        tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
+        if configs.predictor == "bert":
+            tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
+        else:
+            # tokenizer = lambda x: x  # just keep the text as is
+            tokenizer = SentenceTransformer("all-mpnet-base-v2").tokenizer
         train_set = dataset_gen_bert(
             train_data,
             vfeat_lens,
@@ -418,5 +424,6 @@ def gen_or_load_dataset(configs):
             "n_words": len(word_dict),
             "n_chars": len(char_dict),
         }
+    print("Saving")
     save_pickle(dataset, save_path)
     return dataset
