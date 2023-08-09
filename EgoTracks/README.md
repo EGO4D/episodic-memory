@@ -13,7 +13,11 @@ python setup.py install
 ```
 
 ## Download clips
-Please follow https://github.com/EGO4D/docs/blob/main/docs/data/egotracks.md to download train and val annotations.
+Please follow [Start here](https://github.com/EGO4D/docs/blob/main/docs/start-here.md) for instructions on how to access the dataset by accepting the terms of our license agreement.
+And then use the following command to download clips and annotations for EgoTracks:
+```
+ego4d --output_directory ./ --datasets egotracks clips --benchmark EM --version v2
+```
 
 ## Preprocess - extract frames from exported clips
 Replace the following paths for reading and outputing to the correct place in ExtractFramesWorkflowParams in tools/preprocess/extract_ego4d_clip_frames.py: 
