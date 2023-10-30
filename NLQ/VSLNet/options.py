@@ -129,6 +129,12 @@ def read_command_line():
         help="set to the last `_xxx` in ckpt repo to eval results",
     )
     parser.add_argument(
+        "--log_to_wandb",
+        action="store_true",
+        default=False,
+        help="Whether to log to wandb",
+    )
+    parser.add_argument(
         "--log_to_tensorboard",
         type=str,
         default=None,
